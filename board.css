@@ -1,0 +1,6 @@
+[hidden]{display:none!important}
+.board-all{display:inline-block;margin-top:18px;color:var(--blue);font-weight:600;font-size:14px}
+.board-post-nav{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:18px 0;margin-bottom:22px;border-bottom:1px solid var(--line);font-size:14px}
+.board-post-nav:last-child{margin:32px 0 0;border-top:1px solid var(--line);border-bottom:0}
+.board-back{color:var(--blue);font-weight:700}
+.home-journal .card-description{font-size:14px;line-height:1.85;color:var(--muted);margin:0 0 16px;word-break:keep-all;overflow-wrap:anywhere}

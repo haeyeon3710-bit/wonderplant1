@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /adm
+Disallow: /login
+Disallow: /editor.html
+Disallow: /admin/
+Sitemap: https://beautiful-semolina-aa2c94.netlify.app/sitemap.xml
