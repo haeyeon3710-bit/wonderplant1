@@ -9,3 +9,6 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
   included_files = ["adm.html", "editor.html", "index.html", "implant-lifespan.html", "implant-gum-bleeding.html"]
+
+[functions.cms-optimize-image]
+  external_node_modules = ["sharp"]

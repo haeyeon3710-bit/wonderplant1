@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build-site.cjs",
-    "test": "node scripts/check-supabase-client.cjs && node scripts/check-auth.cjs && node scripts/check-posts.cjs && node scripts/check-lambda-bundle.cjs && node scripts/check-cms-ui.cjs && node scripts/check-schedule-ui.cjs && node scripts/check-management.cjs && node scripts/check-public-ui.cjs && node scripts/check-views.cjs && node scripts/check-view-edge.cjs && node scripts/check-categories.cjs && node scripts/check-admin.cjs && node scripts/check-board.cjs"
+    "test": "node scripts/check-supabase-client.cjs && node scripts/check-auth.cjs && node scripts/check-posts.cjs && node scripts/check-lambda-bundle.cjs && node scripts/check-cms-ui.cjs && node scripts/check-schedule-ui.cjs && node scripts/check-management.cjs && node scripts/check-public-ui.cjs && node scripts/check-public-cache.cjs && node scripts/check-image-optimization.cjs && node scripts/check-views.cjs && node scripts/check-view-edge.cjs && node scripts/check-categories.cjs && node scripts/check-admin.cjs && node scripts/check-board.cjs"
   },
   "engines": {
     "node": ">=22.14.0"
   },
   "dependencies": {
-    "sanitize-html": "2.18.0"
+    "sanitize-html": "2.18.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

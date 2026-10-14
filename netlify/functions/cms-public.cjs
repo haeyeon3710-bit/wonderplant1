@@ -28,7 +28,7 @@ exports.handler=async event=>{
    if(!slug||slug!==M.slugify(slug))throw new HttpError(404,'게시글을 찾을 수 없습니다.');
    const result=await data.post(slug);
    if(result.redirect||original!==result.post.slug)return redirect('/blog/'+result.post.slug);
-   return {statusCode:200,headers,body:R.articlePage(result.post,await data.overview(),config)};
+   return {statusCode:200,headers,body:R.articlePage(result.post,result.overview,config)};
   }
   throw new HttpError(404,'게시글을 찾을 수 없습니다.');
  }catch(error){const status=error instanceof HttpError?error.status:503;headers['X-Robots-Tag']='noindex, nofollow';let body='관리 서버 설정을 확인해 주세요.';try{if(config)body=R.errorPage(status,config);}catch{}return {statusCode:status,headers,body};}
