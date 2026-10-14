@@ -14,7 +14,7 @@ function event(path){const url=new URL(path,'https://preview.example');return {h
   const dom=new JSDOM(result.body);const d=dom.window.document;
   assert.equal(d.querySelectorAll('[data-category-filter]').length,6);
   assert(d.querySelector('[data-category-filter="'+(path.includes('category=')?event(path).queryStringParameters.category:'all')+'"]').getAttribute('aria-pressed')==='true');
-  for(const text of d.querySelectorAll('.card-description'))assert([...text.textContent].length>=120&&[...text.textContent].length<=130);
+  for(const text of d.querySelectorAll('.card-description'))assert([...text.textContent].length<=130);
   assert(d.querySelector('link[rel="canonical"]').href.startsWith(new URL(config.siteUrl).origin));dom.window.close();
  }
  for(const slug of ['임플란트-교체-시기와-수명','임플란트-잇몸-출혈']){

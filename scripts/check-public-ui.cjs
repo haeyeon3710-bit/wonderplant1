@@ -23,6 +23,8 @@ const reply=(request,category,posts)=>{
  assert.equal(d.querySelectorAll('script:not([src]):not([type="application/ld+json"])').length,0);
  assert.equal(d.querySelector('.card h3').textContent,post.title);
  w.eval(fs.readFileSync('category-filter.js','utf8'));
+ const cardClick=new w.MouseEvent('click',{bubbles:true,cancelable:true});d.querySelector('.card h3').dispatchEvent(cardClick);
+ assert.equal(cardClick.defaultPrevented,false,'A card link must navigate instead of being treated as pagination');assert.equal(requests.length,0);
  d.querySelector('[data-category-filter="implant"]').click();
  d.querySelector('[data-category-filter="orthodontics"]').click();
  assert.equal(requests.length,2);
@@ -43,7 +45,13 @@ const reply=(request,category,posts)=>{
  assert(article.window.document.querySelector('article').textContent.includes('공개 본문'));
  assert.equal(article.window.document.querySelectorAll('article img[onerror]').length,0);
  assert.equal(JSON.parse(article.window.document.querySelector('script[type="application/ld+json"]').textContent).headline,post.title);
+ assert.equal(article.window.document.querySelector('article time').dateTime,post.published_at);
+ assert(!article.window.document.querySelector('article .metadata').textContent.includes('수정'));
+ assert(article.window.document.querySelector('article time').textContent.includes('12:00'),'Publication time uses Korea time');
  article.window.close();
+ const home=new JSDOM(R.boardPage({...data,recent:[1,2,3,4,5].map(n=>({...post,title:'최근 글 '+n,slug:'최근-'+n}))},config,true));
+ assert.equal(home.window.document.querySelectorAll('.clinic-recent li').length,3);
+ assert.deepEqual([...home.window.document.querySelectorAll('.clinic-recent a')].map(a=>a.textContent),['최근 글 1','최근 글 2','최근 글 3']);home.window.close();
  const paged=new JSDOM(R.boardPage({...data,category:'implant',page:2,pages:3},config));
  assert.equal(paged.window.document.querySelector('link[rel="canonical"]').href,'https://cms-test.invalid/blog/?category=implant&page=2');paged.window.close();
  assert.throws(()=>parameters({sort:'untrusted'}));assert.throws(()=>parameters({page:'0'}));

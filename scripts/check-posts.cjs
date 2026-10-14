@@ -18,7 +18,14 @@ const auth={user:{id},token:'fixture-token',api:{async request(path,options={}){
 }}};
 (async()=>{
   assert.equal(validate({...input,summary:'',thumbnail:'',thumbnailAlt:'',blocks:[]},'preview').status,'draft');
-  assert.throws(()=>validate({...input,status:'published',summary:''},'preview'),e=>e.status===400);
+  assert.equal(validate({...input,status:'published',summary:''},'preview').summary,'');
+  assert.equal(validate({...input,status:'published',summary:'짧은 설명'},'preview').summary,'짧은 설명');
+  assert.throws(()=>validate({...input,status:'published',summary:'가'.repeat(131)},'preview'),e=>e.status===400);
+  const scheduledAt=new Date(Date.now()+3600000).toISOString();
+  assert.equal(validate({...input,status:'scheduled',scheduledAt},'preview').scheduled_at,scheduledAt);
+  for(const scheduledAt of [null,'invalid',new Date(Date.now()-3600000).toISOString()])assert.throws(()=>validate({...input,status:'scheduled',scheduledAt},'preview'),e=>e.status===400);
+  assert.throws(()=>validate({...input,status:'scheduled',scheduledAt,thumbnail:''},'preview'),e=>e.status===400);
+  assert.equal(validate({...input,scheduledAt},'preview').scheduled_at,null,'Saving as a draft cancels the schedule');
   assert.throws(()=>validate({...input,thumbnail:'data:image/png;base64,abc'},'preview'),e=>e.status===400);
   assert.throws(()=>validate({...input,thumbnail:'/media/production/a.png'},'preview'),e=>e.status===400);
   const clean=legacyHtml('<script>alert(1)</script><img src="javascript:alert(1)" onerror="alert(1)"><h2>제목</h2><a href="javascript:alert(1)">링크</a>');

@@ -7,6 +7,12 @@
   const STORE_KEY = 'wonderful-admin-demo-v1';
   const SESSION_KEY = 'wonderful-admin-demo-session';
   const count = value => [...String(value || '')].length;
+  const scheduleInput = value => value ? new Date(new Date(value).getTime()+9*60*60*1000).toISOString().slice(0,16) : '';
+  function scheduleIso(value) {
+    if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value))return null;
+    const date=new Date(value+':00+09:00');
+    return Number.isFinite(date.getTime())&&scheduleInput(date.toISOString())===value?date.toISOString():null;
+  }
   const slugify = value => String(value).normalize('NFC').toLowerCase().trim()
     .replace(/[^가-힣a-z0-9\s-]/g, '').replace(/[\s-]+/g, '-').replace(/^-|-$/g, '').slice(0, 80).replace(/-$/, '');
   const validImage = value => /^\/(?!\/)[^\s<>]*$/.test(value) || /^https:\/\/[^\s<>]+$/i.test(value) || /^data:image\/(?:png|jpeg|webp|gif);base64,[a-z0-9+/=]+$/i.test(value);
@@ -16,7 +22,7 @@
     if (!taxonomy.has(post.category)) return '카테고리를 선택해 주세요.';
     if (!post.slug || post.slug !== slugify(post.slug)) return '슬러그는 한글·영문 소문자·숫자와 하이픈으로 80자 이내로 입력해 주세요.';
     if (others.some(item => item.id !== post.id && item.slug === post.slug)) return '이미 사용 중인 슬러그입니다. 다른 주소를 입력해 주세요.';
-    if (count(post.summary) < 120 || count(post.summary) > 130) return '카드 설명글은 공백 포함 120~130자로 입력해 주세요.';
+    if (count(post.summary) > 130) return '카드 설명글은 공백 포함 130자 이하로 입력해 주세요.';
     if (!validImage(post.thumbnail) || !post.thumbnailAlt.trim()) return '대표 이미지와 이미지 설명을 입력해 주세요.';
     if (!post.blocks.length || !post.blocks.some(block => block.type !== 'image' && block.text.trim())) return '본문에 글 블록을 하나 이상 추가해 주세요.';
     for (const block of post.blocks) {
@@ -52,5 +58,5 @@
       remove(id) { storage.setItem(STORE_KEY, JSON.stringify(this.all().filter(post => post.id !== id))); }
     };
   }
-  return { STORE_KEY, SESSION_KEY, count, slugify, validImage, sessionValid, validate, repository, categories: taxonomy.categories, categoryName: taxonomy.name };
+  return { STORE_KEY, SESSION_KEY, count, scheduleInput, scheduleIso, slugify, validImage, sessionValid, validate, repository, categories: taxonomy.categories, categoryName: taxonomy.name };
 });

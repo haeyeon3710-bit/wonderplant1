@@ -5,7 +5,7 @@
   const $ = id => document.getElementById(id);
   const view = document.body.dataset.view;
   let repo, current, dirty = false, authState = null, originalBlocks = [], saving = false;
-  const statusNames = {draft:'임시저장',published:'발행',private:'비공개'};
+  const statusNames = {draft:'임시저장',scheduled:'예약 발행',published:'발행',private:'비공개'};
   const node = (tag, text, className) => {
     const result = document.createElement(tag);
     if (text !== undefined) result.textContent = text;
@@ -75,6 +75,7 @@
       const categoryCell = node('td', M.categoryName(post.category), 'post-category');
       const status = node('td');
       status.append(node('span', statusNames[post.status], 'badge ' + (post.status === 'published' ? '' : 'draft')));
+      if(post.status==='scheduled')status.append(node('small',new Date(post.scheduledAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' (한국 시간)','schedule-date'));
       const date = new Date(post.updatedAt);
       const dateCell = node('td', Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' }));
       const actions = node('td', undefined, 'row-actions');
@@ -118,11 +119,11 @@
   }
   function countSummary() {
     const count = M.count($('summary').value);
-    $('summary-count').textContent = `${count} / 120~130자`;
-    $('summary-count').className = 'counter ' + (count >= 120 && count <= 130 ? 'valid' : 'invalid');
+    $('summary-count').textContent = `${count} / 130자`;
+    $('summary-count').className = 'counter ' + (count <= 130 ? 'valid' : 'invalid');
   }
   function readForm() {
-    return { ...current, legacyHtml:JSON.stringify(current.blocks)===JSON.stringify(originalBlocks)?current.legacyHtml:'',title: $('title').value.trim(), category: $('category').value, slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim(),status:$('post-status').value };
+    return { ...current, legacyHtml:JSON.stringify(current.blocks)===JSON.stringify(originalBlocks)?current.legacyHtml:'',title: $('title').value.trim(), category: $('category').value, slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim(),status:$('post-status').value,scheduledAt:$('post-status').value==='scheduled'?M.scheduleIso($('scheduled-at').value):null };
   }
   async function readImage(file) {
     if (!file) return null;
@@ -170,6 +171,7 @@
         });
         uploadLabel.append(upload); box.append(uploadLabel);
         field(box, '이미지 설명', block.alt, value => { block.alt = value; image.alt = value; });
+        box.append(node('small','이미지 설명은 alt 대체 텍스트입니다. 화면에 보일 설명은 아래 캡션에 입력하세요.','subtle'));
         field(box, '캡션 (선택)', block.caption, value => { block.caption = value; }).required = false;
       } else field(box, typeName, block.text, value => { block.text = value; }, block.type === 'text');
       $('blocks').append(box);
@@ -212,7 +214,9 @@
     categoryOptions($('category'), '', '카테고리 선택');
     $('category').value = current.category;
     $('post-status').value=current.status;
-    $('post-status').addEventListener('change',markDirty);
+    $('scheduled-at').value=M.scheduleInput(current.scheduledAt);
+    const scheduleFields=()=>{const scheduled=$('post-status').value==='scheduled';$('schedule-field').hidden=!scheduled;$('scheduled-at').required=scheduled;$('scheduled-at').min=M.scheduleInput(new Date(Date.now()+60000).toISOString());};scheduleFields();
+    $('post-status').addEventListener('change',()=>{scheduleFields();markDirty();});
     const dates=()=>{$('post-dates').textContent=`작성: ${current.createdAt?new Date(current.createdAt).toLocaleString('ko-KR'):'저장 전'} · 최초 발행: ${current.publishedAt?new Date(current.publishedAt).toLocaleString('ko-KR'):'아직 발행되지 않음'}`;};dates();
     $('category').addEventListener('change', markDirty);
     for (const [id, key] of [['title', 'title'], ['slug', 'slug'], ['summary', 'summary'], ['thumbnail', 'thumbnail'], ['thumbnail-alt', 'thumbnailAlt']]) $(id).value = current[key];
@@ -237,8 +241,10 @@
     const savePost=async status=>{
       if(!guard()||saving)return;
       if(status)$('post-status').value=status;
+      scheduleFields();
+      if($('post-status').value==='scheduled'&&(!M.scheduleIso($('scheduled-at').value)||Date.parse(M.scheduleIso($('scheduled-at').value))<=Date.now())){message('한국 시간 기준으로 현재보다 늦은 예약 발행일시를 선택해 주세요.',true);$('scheduled-at').focus();markDirty();return;}
       const submitted=JSON.parse(JSON.stringify(readForm())); const fingerprint=JSON.stringify(submitted);const recoveryKey=workingKey();
-      preserveWorking();saving=true;$('save-post').disabled=true;$('publish-post').disabled=true;
+      preserveWorking();saving=true;$('save-post').disabled=true;$('publish-post').disabled=true;$('schedule-post').disabled=true;
       try {
         const saved=await repo.save(submitted);
         const unchanged=JSON.stringify(readForm())===fingerprint;
@@ -249,12 +255,13 @@
         manualSlug = true;
         dates();$('copy-post').disabled=false;
         if(dirty)preserveWorking();
-        message(statusNames[saved.status]+' 상태로 DB에 저장했습니다.'+(dirty?' 저장 요청 중 추가한 변경은 복구본에 보존되어 있습니다. 다시 저장해 주세요.':''));
+        message(statusNames[saved.status]+' 상태로 DB에 저장했습니다.'+(saved.status==='scheduled'?' '+new Date(saved.scheduledAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' (한국 시간)에 예약되었습니다.':'' )+(dirty?' 저장 요청 중 추가한 변경은 복구본에 보존되어 있습니다. 다시 저장해 주세요.':''));
       } catch (error) { message(error.message,true); }
-      finally{saving=false;$('save-post').disabled=false;$('publish-post').disabled=false;}
+      finally{saving=false;$('save-post').disabled=false;$('publish-post').disabled=false;$('schedule-post').disabled=false;}
     };
     $('editor-form').addEventListener('submit',event=>{event.preventDefault();savePost();});
     $('publish-post').addEventListener('click',()=>savePost('published'));
+    $('schedule-post').addEventListener('click',()=>savePost('scheduled'));
     $('copy-post').disabled=!current.version;
     $('copy-post').addEventListener('click',async()=>{try{const copied=await repo.copy(current.id);location.assign('/adm/edit?id='+encodeURIComponent(copied.id));}catch(error){message(error.message,true);}});
     $('download').addEventListener('click', () => {

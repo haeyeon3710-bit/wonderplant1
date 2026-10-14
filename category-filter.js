@@ -20,7 +20,7 @@
         finally{if(id===requestId)list.removeAttribute('aria-busy');}
       }
       list.querySelector('[data-board-sort]').addEventListener('change',event=>load({sort:event.target.value,page:1}));
-      list.addEventListener('click',event=>{const button=event.target.closest('[data-category-filter]');if(button){load({category:button.dataset.categoryFilter,page:1});return;}const link=event.target.closest('[data-page]');if(link){event.preventDefault();load({page:Number(link.dataset.page)});}});
+      list.addEventListener('click',event=>{const button=event.target.closest('[data-category-filter]');if(button){load({category:button.dataset.categoryFilter,page:1});return;}const link=event.target.closest('.board-pagination a[data-page]');if(link){event.preventDefault();load({page:Number(link.dataset.page)});}});
       return;
     }
     const buttons = [...list.querySelectorAll('[data-category-filter]')];

@@ -31,6 +31,6 @@
     async save(post){const prepared=await prepare(post);return update((await Auth.request('/api/posts',{action:'save',post:prepared})).post);},
     async copy(id){return update((await Auth.request('/api/posts',{action:'copy',id})).post);},
     async remove(id,version){await Auth.request('/api/posts',{action:'delete',id,version});posts=posts.filter(p=>p.id!==id);},
-    async importDraft(post){const id=crypto.randomUUID();return this.save({...post,id,version:undefined,legacyId:undefined,status:'draft',slug:window.WonderfulAdmin.slugify(post.slug||post.title||'가져온-초안').slice(0,61)+'-가져오기-'+id.slice(0,8),thumbnailAlt:post.thumbnailAlt||'',thumbnail:post.thumbnail||'',summary:post.summary||'',category:post.category||(post.id==='2'?'complex-implant':'implant')});}
+    async importDraft(post){const id=crypto.randomUUID();return this.save({...post,id,version:undefined,legacyId:undefined,status:'draft',scheduledAt:null,slug:window.WonderfulAdmin.slugify(post.slug||post.title||'가져온-초안').slice(0,61)+'-가져오기-'+id.slice(0,8),thumbnailAlt:post.thumbnailAlt||'',thumbnail:post.thumbnail||'',summary:post.summary||'',category:post.category||(post.id==='2'?'complex-implant':'implant')});}
   };
 })();
