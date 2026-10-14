@@ -23,6 +23,13 @@ const api = (admin = true) => ({
   for (const cookie of renewed.cookies) for (const flag of ['HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/']) assert(cookie.includes(flag));
   const signed = await signIn('test_admin', 'fixture-only-password', api());
   assert.equal(signed.user.id, userId);
+  await assert.rejects(() => requireAdmin({ headers: { cookie: `${ACCESS}=expired` } }, api()), error => error.status === 401);
+  await assert.rejects(() => requireAdmin({ headers: { cookie: `${REFRESH}=expired-refresh` } }, {
+    async request() { const error = new Error('Refresh rejected'); error.status = 400; throw error; }
+  }), error => error.status === 401 && error.message.includes('만료'));
+  await assert.rejects(() => requireAdmin({ headers: { cookie: `${ACCESS}=valid` } }, {
+    async request() { const error = new Error('Temporary upstream outage'); error.status = 500; throw error; }
+  }), error => error.status === 500);
   await assert.rejects(() => signIn('test_admin', 'fixture-only-password', api(false)), error => error.status === 403);
   await assert.rejects(() => signIn('../admin', 'fixture-only-password', api()), error => error.status === 400);
   const valid = { httpMethod: 'POST', rawUrl: 'https://preview.example/api/auth/login', headers: { origin: 'https://preview.example', 'content-type': 'application/json' } };

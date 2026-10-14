@@ -22,7 +22,9 @@ exports.handler = async event => {
     if (path.endsWith('/password')) {
       const body = jsonBody(event, 10000);
       if (typeof body.newPassword !== 'string' || body.newPassword.length < 6 || body.newPassword.length > 256) throw new HttpError(400, '새 비밀번호를 6자 이상으로 입력해 주세요.');
-      const verified = await signIn(auth.user.username, body.currentPassword);
+      let verified;
+      try { verified = await signIn(auth.user.username, body.currentPassword); }
+      catch(error) { if(error.status===401)throw new HttpError(400,'현재 비밀번호를 확인해 주세요.');throw error; }
       await verified.api.request('/auth/v1/user', { method: 'PUT', token: verified.token, body: { password: body.newPassword } });
       const renewed = await signIn(auth.user.username, body.newPassword);
       return response(200, { success: true }, renewed.cookies);

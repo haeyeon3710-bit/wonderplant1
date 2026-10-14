@@ -6,3 +6,4 @@ select:focus-visible{outline:3px solid #8297ff}
 .list-filters select{width:180px;flex-shrink:0;font-size:14px}
 .post-category{font-size:12px;white-space:nowrap;color:var(--muted)}
 @media(max-width:700px){.list-filters{flex-wrap:wrap}.list-filters select,.list-filters .search{width:100%;max-width:none}}
+.backup-actions{display:flex;gap:10px;flex-wrap:wrap}.row-actions button{color:var(--blue)}.row-actions button[aria-label$="삭제"]{color:var(--danger)}

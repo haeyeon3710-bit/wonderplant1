@@ -1,0 +1,15 @@
+{
+  "name": "wonderful-dental-cms",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-site.cjs",
+    "test": "node scripts/check-supabase-client.cjs && node scripts/check-auth.cjs && node scripts/check-categories.cjs"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "sanitize-html": "2.18.0"
+  }
+}

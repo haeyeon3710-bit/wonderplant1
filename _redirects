@@ -1,5 +1,8 @@
 /api/health /.netlify/functions/cms-health 200
 /api/auth/* /.netlify/functions/cms-auth 200
+/api/posts /.netlify/functions/cms-posts 200
+/api/upload /.netlify/functions/cms-upload 200
+/media/* /.netlify/functions/cms-media 200
 /adm/new /.netlify/functions/cms-admin-page 200!
 /adm/edit /.netlify/functions/cms-admin-page 200!
 /adm /.netlify/functions/cms-admin-page 200!

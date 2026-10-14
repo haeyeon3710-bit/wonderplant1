@@ -2,6 +2,10 @@
   command = "node scripts/build-site.cjs"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "22"
+  AWS_LAMBDA_JS_RUNTIME = "nodejs22.x"
+
 [functions]
   directory = "netlify/functions"
   included_files = ["adm.html", "editor.html"]
