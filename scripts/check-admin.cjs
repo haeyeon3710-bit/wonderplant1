@@ -22,7 +22,9 @@ assert.equal(saved.status, 'draft');
 assert.notEqual(seed[0].title, saved.title, 'Original published data must not be mutated');
 assert.throws(() => repo.save({ ...first, id: 'new' }), /슬러그/);
 assert.throws(() => repo.save({ ...first, slug: '../login' }), /슬러그/);
-assert.throws(() => repo.save({ ...first, summary: '짧은 설명' }), /120~130/);
+assert.equal(M.validate({...first,summary:'짧은 설명'},repo.all()),'');
+assert.equal(M.validate({...first,summary:''},repo.all()),'');
+assert.throws(() => repo.save({ ...first, summary: '가'.repeat(131) }), /130자/);
 assert.throws(() => repo.save({ ...first, thumbnail: 'javascript:alert(1)' }), /이미지/);
 assert.throws(() => repo.save({ ...first, blocks: [{ type: 'image', src: 'javascript:alert(1)', alt: 'test' }, { type: 'text', text: '본문' }] }), /이미지/);
 assert(!M.validImage('//external.example/test.png'));
@@ -39,20 +41,8 @@ assert(!M.sessionValid({ mode: 'demo', expiresAt: 99 }, 100));
 assert(M.sessionValid({ mode: 'demo', expiresAt: 101 }, 100));
 assert(!M.sessionValid({ mode: 'admin', expiresAt: 101 }, 100));
 
-// Execute the actual app gate for direct access without a demo session.
-for (const view of ['list', 'editor']) {
-  let destination;
-  const app = { hidden: true };
-  vm.runInNewContext(read('admin/app.js'), {
-    window: { WonderfulAdmin: M },
-    document: { body: { dataset: { view } }, getElementById: () => app },
-    sessionStorage: { getItem: () => null },
-    location: { pathname: view === 'list' ? '/adm' : '/adm/edit', search: '', replace: url => { destination = url; } },
-    URLSearchParams,
-  });
-  assert(destination.startsWith('/login?next='));
-  assert(app.hidden);
-}
+// Real authentication is now checked in the server tests, not by the old demo flag.
+assert(!read('admin/app.js').includes('sessionStorage.setItem'));
 for (const file of ['login.html', 'adm.html', 'editor.html']) {
   const html = read(file);
   assert(html.includes('content="noindex,nofollow"'));

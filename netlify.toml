@@ -1,3 +1,11 @@
 [build]
-  command = "node scripts/build-board.cjs"
-  publish = "."
+  command = "node scripts/build-site.cjs"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  included_files = ["adm.html", "editor.html", "index.html", "implant-lifespan.html", "implant-gum-bleeding.html"]
