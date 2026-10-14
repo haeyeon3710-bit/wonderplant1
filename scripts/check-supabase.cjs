@@ -10,6 +10,14 @@ if (fs.existsSync(envPath)) {
   }
 }
 (async () => {
-  const result = await client(configuration()).health();
+  const api = client(configuration());
+  const result = await api.health();
+  if (process.argv.includes('--login-probe')) {
+    try { await api.request('/functions/v1/cms-login', { method: 'POST', body: { username: 'no_such_test_admin', password: 'fixture-only-invalid' } }); throw new Error('Unexpected login success.'); }
+    catch (error) {
+      if (error.status !== 401 || error.reason !== 'Invalid credentials') throw error;
+      result.loginServiceReachable = true;
+    }
+  }
   console.log(JSON.stringify(result));
 })().catch(error => { console.error(JSON.stringify({ message: error.message, path: error.path, reason: typeof error.reason === 'string' ? error.reason.slice(0, 200) : undefined })); process.exitCode = 1; });

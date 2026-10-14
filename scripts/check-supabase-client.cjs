@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const { configuration, client } = require('../lib/supabase.cjs');
 const env = { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test', CMS_ENVIRONMENT: 'preview' };
 assert.equal(configuration(env).environment, 'preview');
+assert.equal(configuration({ ...env, CMS_ENVIRONMENT: JSON.stringify({ environment: 'preview' }) }).environment, 'preview');
 assert.throws(() => configuration({}), /missing/);
 assert.throws(() => configuration({ ...env, SUPABASE_PUBLISHABLE_KEY: 'sb_secret_not_allowed' }), /secret/);
 assert.throws(() => configuration({ ...env, CMS_ENVIRONMENT: 'anything' }), /CMS_ENVIRONMENT/);
