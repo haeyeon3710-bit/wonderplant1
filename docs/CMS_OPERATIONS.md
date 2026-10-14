@@ -2,7 +2,7 @@
 
 ## 현재 검증 환경
 
-GitHub의 `feat/supabase-cms` 브랜치와 PR #1의 Netlify Deploy Preview에서 CMS를 검증했습니다. 정식 배포 브랜치는 변경하지 않았습니다. Supabase는 사용자가 지정한 프로젝트를 사용하며, 서버의 `CMS_ENVIRONMENT` 값으로 게시글과 조회 통계를 preview/production으로 구분합니다. 카테고리 구성과 관리자 계정은 두 환경에서 공유합니다.
+GitHub의 `feat/supabase-cms` 브랜치와 PR #1의 Netlify Deploy Preview에서 CMS를 검증한 뒤, 사용자의 요청으로 main에도 적용합니다. 기본 Netlify 주소를 아직 정식 발행 전 개발 사이트로 사용하므로, 기본 배포와 Deploy Preview는 같은 preview 글과 통계를 사용합니다. 관리자 계정과 카테고리도 그대로 유지합니다. 서버의 `CMS_ENVIRONMENT` 값으로 preview/production을 구분하는 DB 구조는 유지하며, 실제 운영 전환 때 필요한 글만 이전하고 운영 통계는 새로 시작합니다.
 
 관리자 경로는 `/adm`, 로그인은 `/login`, 작성은 `/adm/new`, 수정은 `/adm/edit?id=...`입니다. 공개 글은 `/blog/한글-슬러그`에서 열립니다. 목록은 기본 전체보기이며 카테고리·최근 발행순·누적/최근 7일/최근 30일 조회순을 제공합니다.
 
@@ -59,13 +59,13 @@ delete from public.post_views where viewed_at < now()-interval '35 days';
 
 ## 정식 운영으로 전환할 때
 
-현재 Deploy Preview는 Netlify 팀 로그인으로 보호됩니다. 테스트 중 이 보호를 끄지 않았습니다. 정식 운영 설정은 사용자의 발행 결정 후 적용합니다.
+현재 Deploy Preview는 Netlify 팀 로그인으로 보호됩니다. 테스트 중 이 보호를 끄지 않았습니다. 기본 주소에 CMS를 적용해도 정식 발행 전 개발 데이터 구분과 noindex 설정은 유지합니다. 기본 주소의 `/login`에서 같은 관리자 아이디로 로그인하며, 프리뷰 주소의 로그인 쿠키는 다른 주소로 이전하지 않습니다. 정식 운영 설정은 사용자의 발행 결정 후 적용합니다.
 
 - 운영 도메인을 서버의 `SITE_URL`로 설정합니다. SEO canonical과 사이트맵은 이 값을 사용합니다.
 - 운영 배포의 `CMS_ENVIRONMENT`를 production으로 설정하고, Deploy Preview는 preview로 유지합니다. Netlify 비밀값 검사와 충돌하지 않도록 이 설정은 환경 이름을 담은 구조화된 값도 지원합니다.
-- 현재 조회수 비밀값은 **Deploy Preview에만** 있습니다. 운영용 `CMS_VIEW_SECRET`은 별도로 생성하고 production 해시를 `cms_private.view_bridge`에 등록합니다. 서버 전용 비밀값과 Supabase 전체 DB 접근 키를 공개 코드에 넣지 않습니다.
+- 현재 조회수 비밀값은 사용자 승인 후 **기본 배포와 Deploy Preview**에 등록합니다. 두 주소는 같은 preview DB 검증 해시를 사용합니다. 정식 운영용 `CMS_VIEW_SECRET`은 별도로 생성하고 production 해시를 `cms_private.view_bridge`에 등록합니다. 서버 전용 비밀값과 Supabase 전체 DB 접근 키를 공개 코드에 넣지 않습니다.
 - 운영에 필요한 글만 명시적으로 production에 복사합니다. preview 자료와 테스트 조회 기록을 일괄 이전하지 않습니다. 두 원본 글은 `content/legacy-posts.backup.json`으로 보관돼 있습니다. 테스트 자동 발행/운영 데이터 복사 기능은 실행하지 않았습니다.
-- 운영 데이터가 준비된 뒤 PR을 검토·병합합니다. 발행 화면의 글 저장/수정에는 이후 Git 커밋이나 Netlify 재배포가 필요하지 않습니다.
+- CMS 코드는 main에 반영하고, 운영 데이터 전환은 별도 설정으로 진행합니다. 발행 화면의 글 저장/수정에는 이후 Git 커밋이나 Netlify 재배포가 필요하지 않습니다.
 
 카테고리/관리자까지 개발·운영을 물리적으로 분리하려면 별도 Supabase 프로젝트를 사용하고 배포 맥락별 연결 값을 지정합니다. 현재는 기존 프로젝트 한 개를 사용하는 구조이며, 유료 브랜치나 새로운 유료 서비스는 추가하지 않았습니다.
 
