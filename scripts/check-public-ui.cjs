@@ -47,6 +47,7 @@ const reply=(request,category,posts)=>{
  assert.equal(JSON.parse(article.window.document.querySelector('script[type="application/ld+json"]').textContent).headline,post.title);
  assert.equal(article.window.document.querySelector('article time').dateTime,post.published_at);
  assert(!article.window.document.querySelector('article .metadata').textContent.includes('수정'));
+ assert(article.window.document.querySelector('article .metadata').textContent.includes('발행일 :'));
  assert(article.window.document.querySelector('article time').textContent.includes('12:00'),'Publication time uses Korea time');
  article.window.close();
  const home=new JSDOM(R.boardPage({...data,recent:[1,2,3,4,5].map(n=>({...post,title:'최근 글 '+n,slug:'최근-'+n}))},config,true));
