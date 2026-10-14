@@ -1,8 +1,8 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module === 'object' && module.exports ? require('../categories.js') : root.WonderfulCategories);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.WonderfulAdmin = api;
-})(typeof window === 'object' ? window : globalThis, function () {
+})(typeof window === 'object' ? window : globalThis, function (taxonomy) {
   'use strict';
   const STORE_KEY = 'wonderful-admin-demo-v1';
   const SESSION_KEY = 'wonderful-admin-demo-session';
@@ -13,6 +13,7 @@
   const sessionValid = (session, now = Date.now()) => Boolean(session && session.mode === 'demo' && Number.isFinite(session.expiresAt) && session.expiresAt > now);
   function validate(post, others) {
     if (!post.title.trim() || count(post.title) > 100) return '제목을 1~100자로 입력해 주세요.';
+    if (!taxonomy.has(post.category)) return '카테고리를 선택해 주세요.';
     if (!post.slug || post.slug !== slugify(post.slug)) return '슬러그는 한글·영문 소문자·숫자와 하이픈으로 80자 이내로 입력해 주세요.';
     if (others.some(item => item.id !== post.id && item.slug === post.slug)) return '이미 사용 중인 슬러그입니다. 다른 주소를 입력해 주세요.';
     if (count(post.summary) < 120 || count(post.summary) > 130) return '카드 설명글은 공백 포함 120~130자로 입력해 주세요.';
@@ -31,7 +32,12 @@
         const raw = storage.getItem(STORE_KEY);
         const value = raw === null ? seed : JSON.parse(raw);
         if (!Array.isArray(value) || value.some(post => !post || typeof post.id !== 'string' || typeof post.title !== 'string' || typeof post.slug !== 'string' || typeof post.summary !== 'string' || !Array.isArray(post.blocks))) throw new Error('저장된 체험 데이터를 읽을 수 없습니다. 브라우저 저장소를 확인해 주세요.');
-        return JSON.parse(JSON.stringify(value));
+        // Older browser drafts did not have a category. Preserve them and fill
+        // the original post classification, or use the first category for new drafts.
+        return JSON.parse(JSON.stringify(value)).map(post => ({
+          ...post,
+          category: post.category ?? seed.find(original => original.id === post.id)?.category ?? taxonomy.categories[0].id,
+        }));
       },
       save(post) {
         const items = this.all();
@@ -46,5 +52,5 @@
       remove(id) { storage.setItem(STORE_KEY, JSON.stringify(this.all().filter(post => post.id !== id))); }
     };
   }
-  return { STORE_KEY, SESSION_KEY, count, slugify, validImage, sessionValid, validate, repository };
+  return { STORE_KEY, SESSION_KEY, count, slugify, validImage, sessionValid, validate, repository, categories: taxonomy.categories, categoryName: taxonomy.name };
 });

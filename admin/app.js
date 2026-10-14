@@ -44,7 +44,8 @@
     if (!guard()) return;
     const query = $('search').value.trim().toLowerCase();
     const all = repo.all();
-    const items = all.filter(post => (post.title + ' ' + post.slug).toLowerCase().includes(query));
+    const category = $('category-filter').value;
+    const items = all.filter(post => (category === 'all' || post.category === category) && (post.title + ' ' + post.slug + ' ' + M.categoryName(post.category)).toLowerCase().includes(query));
     $('post-list').replaceChildren();
     $('post-count').textContent = `전체 ${all.length}개 · 표시 ${items.length}개`;
     $('empty').hidden = items.length > 0;
@@ -55,6 +56,7 @@
       const editUrl = '/adm/edit?id=' + encodeURIComponent(post.id);
       const title = node('a', post.title, 'post-title'); title.href = editUrl;
       titleCell.append(title, node('div', '/blog/' + post.slug, 'post-slug'));
+      const categoryCell = node('td', M.categoryName(post.category), 'post-category');
       const status = node('td');
       status.append(node('span', post.status === 'sample' ? '기존 글 사본' : '체험 초안', 'badge ' + (post.status === 'sample' ? '' : 'draft')));
       const date = new Date(post.updatedAt);
@@ -68,10 +70,15 @@
         try { repo.remove(post.id); renderList(); message('체험 목록에서 삭제했습니다.'); }
         catch { message('삭제를 저장하지 못했습니다. 브라우저 저장소를 확인해 주세요.', true); }
       });
-      actions.append(edit, remove); row.append(titleCell, status, dateCell, actions); $('post-list').append(row);
+      actions.append(edit, remove); row.append(titleCell, categoryCell, status, dateCell, actions); $('post-list').append(row);
     });
   }
   function markDirty() { dirty = true; }
+  function categoryOptions(select, firstValue, firstLabel) {
+    select.replaceChildren();
+    const first = node('option', firstLabel); first.value = firstValue; select.append(first);
+    M.categories.forEach(category => { const option = node('option', category.name); option.value = category.id; select.append(option); });
+  }
   function safeImage(image, src, alt = '') {
     image.alt = alt;
     image.hidden = !M.validImage(src);
@@ -85,7 +92,7 @@
     $('summary-count').className = 'counter ' + (count >= 120 && count <= 130 ? 'valid' : 'invalid');
   }
   function readForm() {
-    return { ...current, title: $('title').value.trim(), slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim() };
+    return { ...current, title: $('title').value.trim(), category: $('category').value, slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim() };
   }
   async function readImage(file) {
     if (!file) return null;
@@ -151,8 +158,8 @@
     root.append(node('div', '카드 목록에서 보이는 모습', 'preview-label'));
     const card = node('div', undefined, 'preview-card');
     const thumbnail = node('img'); safeImage(thumbnail, post.thumbnail, post.thumbnailAlt);
-    const cardBody = node('div'); cardBody.append(node('h3', post.title || '글 제목'), node('p', post.summary || '카드 설명글'));
-    card.append(thumbnail, cardBody); root.append(card, node('div', '본문에서 보이는 모습', 'preview-label'), node('h1', post.title || '글 제목'));
+    const cardBody = node('div'); cardBody.append(node('small', M.categoryName(post.category)), node('h3', post.title || '글 제목'), node('p', post.summary || '카드 설명글'));
+    card.append(thumbnail, cardBody); root.append(card, node('div', '본문에서 보이는 모습', 'preview-label'), node('small', M.categoryName(post.category)), node('h1', post.title || '글 제목'));
     // The list summary is intentionally omitted from the article body.
     post.blocks.forEach(block => {
       if (block.type === 'image') {
@@ -166,10 +173,13 @@
     const id = new URLSearchParams(location.search).get('id');
     const editing = /\/edit\/?$/.test(location.pathname) || Boolean(id);
     current = editing ? repo.all().find(post => post.id === id) : {
-      id: crypto.randomUUID(), title: '', slug: '', summary: '', thumbnail: '', thumbnailAlt: '', status: 'draft', blocks: [{ type: 'text', text: '' }]
+      id: crypto.randomUUID(), title: '', slug: '', category: '', summary: '', thumbnail: '', thumbnailAlt: '', status: 'draft', blocks: [{ type: 'text', text: '' }]
     };
     if (!current) { $('editor-form').hidden = true; message('글을 찾을 수 없습니다. 게시글 관리 목록에서 다시 선택해 주세요.', true); return; }
     $('editor-title').textContent = editing ? '글 수정' : '새 글 쓰기';
+    categoryOptions($('category'), '', '카테고리 선택');
+    $('category').value = current.category;
+    $('category').addEventListener('change', markDirty);
     for (const [id, key] of [['title', 'title'], ['slug', 'slug'], ['summary', 'summary'], ['thumbnail', 'thumbnail'], ['thumbnail-alt', 'thumbnailAlt']]) $(id).value = current[key];
     let manualSlug = editing;
     $('slug').addEventListener('input', () => { manualSlug = true; });
@@ -223,7 +233,9 @@
     document.addEventListener('visibilitychange', () => { if (!document.hidden) guard(); });
     document.addEventListener('click', event => { if (!hasSession()) { event.preventDefault(); event.stopImmediatePropagation(); guard(); } }, true);
     if (view === 'list') {
+      categoryOptions($('category-filter'), 'all', '전체보기');
       renderList(); $('search').addEventListener('input', renderList);
+      $('category-filter').addEventListener('change', renderList);
       window.addEventListener('storage', event => { if (event.key === M.STORE_KEY) { try { renderList(); } catch (error) { message(error.message, true); } } });
     } else setupEditor();
   } catch (error) {

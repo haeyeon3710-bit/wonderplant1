@@ -16,6 +16,7 @@ GitHub와 연결된 Netlify 프로젝트에서 배포가 완료된 뒤 `/login`�
 ## 구현한 편집 기능
 
 - 제목, 한글·영문 슬러그, 중복 주소 검사
+- 카테고리 선택·수정, 관리 목록의 카테고리 표시와 검색 필터
 - 공백 포함 120~130자 카드 설명글과 글자 수 표시
 - 대표 이미지와 대체 텍스트
 - 소제목·글·이미지 블록 추가, 순서 이동, 삭제
@@ -50,6 +51,7 @@ Netlify Identity는 2026-02-19 공식 안내에서 지원 지속으로 변경되
 node scripts/build-board.cjs
 node scripts/check-board.cjs
 node scripts/check-admin.cjs
+node scripts/check-categories.cjs
 ```
 
 실제 서버 인증·API 검사는 연동 전이므로 수행할 수 없습니다. 로컬 테스트는 시안의 데이터 처리와 화면 이동 조건을 검사합니다.
