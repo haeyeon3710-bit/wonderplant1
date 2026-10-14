@@ -13,6 +13,7 @@ const auth={user:{id},token:'fixture-token',api:{async request(path,options={}){
     assert(!('view_count' in options.body));assert(!('created_at' in options.body));assert(!('published_at' in options.body));assert(!('environment' in options.body));
     if(conflict)return {data:[]};stored={...stored,...options.body,version:stored.version+1};return {data:[stored]};
   }
+  if(options.method==='POST'){stored={...stored,...options.body,version:1};return {data:[stored]};}
   return {data:[stored]};
 }}};
 (async()=>{
@@ -27,5 +28,7 @@ const auth={user:{id},token:'fixture-token',api:{async request(path,options={}){
   assert(metadata.legacyHtml.includes('원본'));assert.equal(metadata.category,'complex-implant');
   const edited=await posts.save({...input,version:2,blocks:[{type:'text',text:'수정한 본문'}]});assert.equal(edited.legacyHtml,'');
   conflict=true;await assert.rejects(()=>posts.save({...input,version:3}),e=>e.status===409);
+  const restored=await posts.save({...input,legacyHtml:'<article><h1>백업</h1><p>블록에 없는 원본 본문</p><script>alert(1)</script></article>'});
+  assert(restored.legacyHtml.includes('블록에 없는 원본 본문'));assert(!restored.legacyHtml.includes('script'));
   console.log('PASS: draft/publish validation, safe HTML/media, protected metadata, original HTML preservation, body edits, and concurrent edit conflicts.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
