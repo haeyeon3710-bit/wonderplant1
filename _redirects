@@ -1,3 +1,4 @@
+/api/optimize-image /.netlify/functions/cms-optimize-image 200
 /api/manage /.netlify/functions/cms-management 200
 /api/views /.netlify/functions/cms-views 200
 /api/health /.netlify/functions/cms-health 200

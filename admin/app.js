@@ -127,8 +127,9 @@
   }
   async function readImage(file) {
     if (!file) return null;
-    message('이미지를 업로드하고 있습니다.');
-    const src=await repo.upload(file);message('이미지를 업로드했습니다. 글을 저장해 연결해 주세요.');return src;
+    message('이미지 크기와 용량을 최적화한 뒤 업로드하고 있습니다.');
+    const src=await repo.upload(file),info=repo.lastUpload,size=bytes=>bytes>=1024*1024?(bytes/1024/1024).toFixed(2)+'MB':Math.round(bytes/1024)+'KB';
+    message((info?.converted?'WebP로 변환해 업로드했습니다. '+size(info.originalBytes)+' → '+size(info.bytes)+'. ':'이미지를 업로드했습니다. ')+'글을 저장해 연결해 주세요.');return src;
   }
   function field(parent, labelText, value, onInput, multiline = false) {
     const label = node('label', undefined, 'field'); label.append(node('span', labelText));

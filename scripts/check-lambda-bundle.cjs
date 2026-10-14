@@ -10,6 +10,8 @@ const root=path.resolve(__dirname,'..');
   execFileSync(process.execPath,['--no-experimental-require-module','-e',"if(typeof require(process.argv[1]).handler!=='function')process.exit(1)",path.join(out,'cms-posts.cjs')]);
   await esbuild.build({entryPoints:[path.join(root,'netlify/functions/cms-public.cjs')],outfile:path.join(out,'cms-public.cjs'),platform:'node',format:'cjs',target:'node22',bundle:true,logLevel:'warning'});
   execFileSync(process.execPath,['--no-experimental-require-module','-e',"if(typeof require(process.argv[1]).handler!=='function')process.exit(1)",path.join(out,'cms-public.cjs')]);
+  await esbuild.build({entryPoints:[path.join(root,'netlify/functions/cms-optimize-image.cjs')],outfile:path.join(out,'cms-optimize-image.cjs'),platform:'node',format:'cjs',target:'node22',bundle:true,external:['sharp'],logLevel:'warning'});
+  execFileSync(process.execPath,['--no-experimental-require-module','-e',"if(typeof require(process.argv[1]).handler!=='function')process.exit(1)",path.join(out,'cms-optimize-image.cjs')]);
   await esbuild.build({entryPoints:[path.join(root,'netlify/functions/cms-views.mjs')],outfile:path.join(out,'cms-views.mjs'),platform:'node',format:'esm',target:'node22',bundle:true,logLevel:'warning'});
   execFileSync(process.execPath,['--input-type=module','-e',"import {pathToFileURL} from 'node:url';const m=await import(pathToFileURL(process.argv[1]));if(typeof m.default!=='function')process.exit(1)",path.join(out,'cms-views.mjs')]);
   console.log('PASS: bundled CMS function and content tests load with Lambda experimental module support disabled.');

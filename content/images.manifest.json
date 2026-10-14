@@ -1,0 +1,290 @@
+{
+  "/images/about.png": {
+    "originalBytes": 1540960,
+    "originalSha256": "2efd6542202e78e142be2375c1619261954ccdf01a72a46eb9dd520a61e22e8c",
+    "full": {
+      "src": "/images/optimized/about-67592baed9c4-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 30258
+    },
+    "card": {
+      "src": "/images/optimized/about-0ed4ce1af9d0-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 12450
+    }
+  },
+  "/images/bleeding.png": {
+    "originalBytes": 1694609,
+    "originalSha256": "a24601a149bc8a507cfe68ab49a88d873004d60c56dd48822d0920743b7fb9d5",
+    "full": {
+      "src": "/images/optimized/bleeding-f251e54693e9-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 57804
+    },
+    "card": {
+      "src": "/images/optimized/bleeding-95c61c381560-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 23782
+    }
+  },
+  "/images/care.png": {
+    "originalBytes": 1700192,
+    "originalSha256": "cfa319f85bd7dd7867b3d455413d847af5340d5f601ac76354048161bdc8a086",
+    "full": {
+      "src": "/images/optimized/care-20e4ba660a1c-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 73402
+    },
+    "card": {
+      "src": "/images/optimized/care-867ce95bbd6b-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 31338
+    }
+  },
+  "/images/checkup.png": {
+    "originalBytes": 1851270,
+    "originalSha256": "b3a2f1588fc846c80de2a89ba73ff85151703a5d4ea85dc624203a9a0996dca8",
+    "full": {
+      "src": "/images/optimized/checkup-188744f9e2bd-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 98572
+    },
+    "card": {
+      "src": "/images/optimized/checkup-f05a3b81602d-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 42796
+    }
+  },
+  "/images/clinic-365-days.png": {
+    "originalBytes": 950904,
+    "originalSha256": "79fe9db31efe3eb1c53d4642a97c59ef0201f91653915a927c8b9f5a05a261b0",
+    "full": {
+      "src": "/images/optimized/clinic-365-days-7037bfbcea1e-1600.webp",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 81334
+    },
+    "card": {
+      "src": "/images/optimized/clinic-365-days-18f598797428-800.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 59278
+    }
+  },
+  "/images/clinic-candidates-edited.png": {
+    "originalBytes": 1543106,
+    "originalSha256": "10c0e7404f4b5afc54177cceb52e56f66ee146519dbe32ff3277d28e90aedff4",
+    "full": {
+      "src": "/images/optimized/clinic-candidates-edited-02e62bcd02aa-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 95750
+    },
+    "card": {
+      "src": "/images/optimized/clinic-candidates-edited-6eccf9dc7067-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 44482
+    }
+  },
+  "/images/clinic-complex-edited.png": {
+    "originalBytes": 1668507,
+    "originalSha256": "41fa9adb13ccfcf1dc4d6fbc5b6324d5fcedf5cb234069f63e2c691fd3cbd04c",
+    "full": {
+      "src": "/images/optimized/clinic-complex-edited-493d9733b626-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 132032
+    },
+    "card": {
+      "src": "/images/optimized/clinic-complex-edited-8d30d2d68986-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 57228
+    }
+  },
+  "/images/clinic-programs-edited.png": {
+    "originalBytes": 1646039,
+    "originalSha256": "bcbe66c13501bd76d68a25e154c08d21aa179e58c9b618532de81d5bf73fdafb",
+    "full": {
+      "src": "/images/optimized/clinic-programs-edited-c3e84736abfb-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 113306
+    },
+    "card": {
+      "src": "/images/optimized/clinic-programs-edited-f15d269659e8-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 51304
+    }
+  },
+  "/images/clinic-sedation-edited.png": {
+    "originalBytes": 1539999,
+    "originalSha256": "6ed57349d554dee71d1a2772d6b48f294d3bcd74b6d078b5d6319dd5bc4f80a5",
+    "full": {
+      "src": "/images/optimized/clinic-sedation-edited-51ff8e28365c-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 126964
+    },
+    "card": {
+      "src": "/images/optimized/clinic-sedation-edited-21024c497d4b-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 59936
+    }
+  },
+  "/images/clinic-strengths-edited.png": {
+    "originalBytes": 1489110,
+    "originalSha256": "f1b82d0dadae55bbf1a3ed678f385dd912052f666ff5ee556149eb13bb1184b6",
+    "full": {
+      "src": "/images/optimized/clinic-strengths-edited-4b154aa2c140-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 86964
+    },
+    "card": {
+      "src": "/images/optimized/clinic-strengths-edited-c027c445be10-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 41120
+    }
+  },
+  "/images/clinic-team-collaboration.png": {
+    "originalBytes": 1157429,
+    "originalSha256": "2083e65e7d9408add7e13a0e7e13e5f2d0861f364d0e9a9278bda659ffeb20cb",
+    "full": {
+      "src": "/images/optimized/clinic-team-collaboration-840f0bd11ce6-1600.webp",
+      "width": 1080,
+      "height": 1080,
+      "bytes": 86084
+    },
+    "card": {
+      "src": "/images/optimized/clinic-team-collaboration-0d7eb3ec3488-800.webp",
+      "width": 800,
+      "height": 800,
+      "bytes": 64344
+    }
+  },
+  "/images/clinic-team-original.png": {
+    "originalBytes": 309661,
+    "originalSha256": "bc977694cd451b499f66b4f127e15908f105750e1bbb099fa0ae53f41d6a428b",
+    "full": {
+      "src": "/images/optimized/clinic-team-original-b675d7825d87-1600.webp",
+      "width": 599,
+      "height": 307,
+      "bytes": 44966
+    },
+    "card": {
+      "src": "/images/optimized/clinic-team-original-b675d7825d87-1600.webp",
+      "width": 599,
+      "height": 307,
+      "bytes": 44966
+    }
+  },
+  "/images/lifespan.png": {
+    "originalBytes": 1594508,
+    "originalSha256": "0b8e79702a3c50057bbff52aadcf355de2c7b7be5ba38dcc068dd1cd59950be6",
+    "full": {
+      "src": "/images/optimized/lifespan-48b1d5640282-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 59096
+    },
+    "card": {
+      "src": "/images/optimized/lifespan-c1ef7d0a6a85-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 25980
+    }
+  },
+  "/images/parts.png": {
+    "originalBytes": 1603224,
+    "originalSha256": "e62e49dc05dab58cdca7c6ef8fdf8a24f696a94b382e2fe360e5ec5abbcea470",
+    "full": {
+      "src": "/images/optimized/parts-2bf381af7646-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 54288
+    },
+    "card": {
+      "src": "/images/optimized/parts-092332eda990-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 23016
+    }
+  },
+  "/images/signs.png": {
+    "originalBytes": 1696720,
+    "originalSha256": "839f4e20fbf9e3720df5a3b190cf2c25bd29061f0f391e6b9bedbe2c48274509",
+    "full": {
+      "src": "/images/optimized/signs-b5ff4f460abf-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 79094
+    },
+    "card": {
+      "src": "/images/optimized/signs-22366a506be0-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 37866
+    }
+  },
+  "/images/summary.png": {
+    "originalBytes": 1594229,
+    "originalSha256": "40cb68df534d555c42c93d33d2f8be7d4a608aec300537ac2de47174c31b7b34",
+    "full": {
+      "src": "/images/optimized/summary-a1a660f36050-1600.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 55164
+    },
+    "card": {
+      "src": "/images/optimized/summary-3e3702e77ad7-800.webp",
+      "width": 800,
+      "height": 533,
+      "bytes": 23726
+    }
+  },
+  "/images/wonderful-logo.png": {
+    "originalBytes": 13902,
+    "originalSha256": "8384772e43adc8c897355da7087d109882b8e8b3bd2056be124d1496b1b86006",
+    "full": {
+      "src": "/images/optimized/wonderful-logo-8dc3609bd41e-1600.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 9712
+    },
+    "card": {
+      "src": "/images/optimized/wonderful-logo-8dc3609bd41e-1600.webp",
+      "width": 160,
+      "height": 160,
+      "bytes": 9712
+    }
+  },
+  "/images/wonderful-wordmark.png": {
+    "originalBytes": 8175,
+    "originalSha256": "3354cce531935bc8523611e567dd559769103ebd4eac85d5bbbefa9ba256d157",
+    "full": {
+      "src": "/images/optimized/wonderful-wordmark-be9babf057d2-1600.webp",
+      "width": 219,
+      "height": 45,
+      "bytes": 4312
+    },
+    "card": {
+      "src": "/images/optimized/wonderful-wordmark-be9babf057d2-1600.webp",
+      "width": 219,
+      "height": 45,
+      "bytes": 4312
+    }
+  }
+}
