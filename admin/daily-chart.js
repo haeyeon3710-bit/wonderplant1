@@ -5,9 +5,9 @@
  function render(data,today){
   snapshot={data,today};const days=data.days.filter(day=>day.day<=today),host=$('daily-chart');host.replaceChildren();
   if(!days.length){$('daily-selected').textContent='표시할 날짜가 없습니다.';return;}
-  const width=Math.max(560,host.clientWidth,days.length*25+66),height=300,left=42,right=18,top=18,bottom=58,plotWidth=width-left-right,plotHeight=height-top-bottom;
+  const minimumWidth=Math.max(360,days.length*25+66),width=Math.max(minimumWidth,host.clientWidth||560),height=300,left=42,right=18,top=18,bottom=58,plotWidth=width-left-right,plotHeight=height-top-bottom;
   const views=days.map(day=>Math.max(0,Number(day.views)||0)),maximum=Math.max(2,Math.ceil(Math.max(...views)/2)*2),svg=svgNode('svg',{viewBox:`0 0 ${width} ${height}`,role:'group','aria-label':$('daily-caption').textContent});
-  svg.style.minWidth=(days.length*25+66>560?days.length*25+66:560)+'px';
+  svg.style.minWidth=minimumWidth+'px';
   svg.append(svgNode('title',{},$('daily-caption').textContent),svgNode('desc',{},'가로축은 날짜, 세로축은 조회수입니다. 각 날짜를 선택하면 조회수를 확인할 수 있습니다.'));
   svg.append(svgNode('rect',{x:left,y:top,width:plotWidth,height:plotHeight,fill:'#f5fbfe'}));
   for(const value of [0,maximum/2,maximum]){
