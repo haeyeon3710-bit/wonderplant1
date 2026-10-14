@@ -25,5 +25,5 @@ for(const image of Object.values(imageManifest))for(const variant of [image.full
 fs.appendFileSync(path.join(output,'_redirects'),'\n'+Object.entries(imageManifest).map(([original,image])=>`${original} ${image.full.src} 301!`).join('\n')+'\n');
 fs.writeFileSync(path.join(output,'_headers'),'/images/optimized/*\n  Cache-Control: public, max-age=31536000, immutable\n');
 fs.mkdirSync(path.join(output,'admin'));
-for(const name of ['admin.css','model.js','auth.js','images.js','database.js','management.js','app.js'])fs.copyFileSync(path.join(root,'admin',name),path.join(output,'admin',name));
+for(const name of ['admin.css','model.js','auth.js','images.js','database.js','daily-chart.js','management.js','app.js'])fs.copyFileSync(path.join(root,'admin',name),path.join(output,'admin',name));
 console.log('Built public assets in dist; article/admin templates, seeds, server files and SQL stay excluded.');

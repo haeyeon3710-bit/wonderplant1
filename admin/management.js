@@ -18,7 +18,7 @@
  }
  async function refreshDaily(){
   const request=++dailyRequest,month=$('daily-month').value;monthControls();
-  $('daily-stats').replaceChildren();$('daily-total').textContent='—';$('daily-table').hidden=true;
+  $('daily-stats').replaceChildren();$('daily-chart').replaceChildren();$('daily-total').textContent='—';$('daily-visual').hidden=true;
   if(!month||month>today().slice(0,7)){$('daily-message').textContent='현재 월 또는 이전 월을 선택해 주세요.';return;}
   $('daily-message').textContent=monthLabel(month)+' 조회수를 불러오고 있습니다.';
   try{
@@ -30,8 +30,11 @@
     tr.append(date,node('td',new Intl.DateTimeFormat('ko-KR',{weekday:'short',timeZone:'UTC'}).format(new Date(day.day+'T00:00:00Z'))),node('td',number(day.views)));
     if(day.day===today())tr.className='daily-today';$('daily-stats').append(tr);
    }
-   $('daily-caption').textContent=monthLabel(month)+' 일별 조회수';$('daily-total').textContent=number(dailyStats.total);
-   $('daily-table').hidden=false;$('daily-message').textContent=monthLabel(month)+' · 한국 시간 기준 · 조회수가 없는 날은 0으로 표시합니다.';
+   $('daily-caption').textContent=monthLabel(month)+' 일별 조회수';$('daily-values-caption').textContent=monthLabel(month)+' 일별 조회수 상세';
+   $('daily-total').textContent=number(dailyStats.total);$('daily-table-total').textContent=number(dailyStats.total);
+   $('daily-visual').hidden=false;window.WonderfulDailyChart.render(dailyStats,today());
+   $('daily-updated').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date())+' 기준';
+   $('daily-message').textContent='한국 시간 기준 · 이번 달은 오늘까지 표시합니다. 날짜를 가리키거나 선택하면 조회수를 확인할 수 있습니다.';
   }catch(error){if(request===dailyRequest)$('daily-message').textContent='일별 조회수를 불러오지 못했습니다. '+error.message;}
  }
  function ranking(){
