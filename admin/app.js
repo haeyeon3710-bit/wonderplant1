@@ -22,6 +22,10 @@
   function hasSession() {
     return Boolean(authState?.user);
   }
+  function confirmAction(text){
+    const dialog=$('confirm-dialog');$('confirm-question').textContent=text;dialog.returnValue='cancel';
+    return new Promise(resolve=>{dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true});dialog.showModal();});
+  }
   async function refreshSession() {
     try { authState = await Auth.session(); }
     catch (error) {
@@ -77,7 +81,7 @@
       const remove = node('button', '삭제'); remove.type = 'button'; remove.setAttribute('aria-label', post.title + ' 삭제');
       remove.addEventListener('click', async () => {
         if (!guard()) return;
-        if (!confirm(`“${post.title}”을 삭제할까요? 발행된 글은 공개 목록에서도 삭제됩니다. JSON 백업을 먼저 내려받습니다.`)) return;
+        if (!await confirmAction(`“${post.title}”을 삭제할까요? 발행된 글은 공개 목록에서도 삭제됩니다. JSON 백업을 먼저 내려받습니다.`)) return;
         try { downloadJson(post,post.slug+'-삭제전-백업'); await repo.remove(post.id,post.version); renderList(); message('게시글을 삭제했습니다. 이미지 파일은 보존됩니다.'); }
         catch (error) { message(error.message, true); }
       });
@@ -142,10 +146,10 @@
         const button = node('button', label); button.type = 'button';
         button.setAttribute('aria-label', `${index + 1}번 ${typeName} 블록 ${delta === -1 ? '위로' : delta === 1 ? '아래로' : '삭제'}`);
         button.disabled = (delta === -1 && index === 0) || (delta === 1 && index === current.blocks.length - 1);
-        button.addEventListener('click', () => {
+        button.addEventListener('click', async () => {
           if (!guard()) return;
           if (!delta) {
-            if (!confirm('이 블록을 삭제할까요? 저장 전 변경사항에도 반영됩니다.')) return;
+            if (!await confirmAction('이 블록을 삭제할까요? 저장 전 변경사항에도 반영됩니다.')) return;
             current.blocks.splice(index, 1);
           } else [current.blocks[index], current.blocks[index + delta]] = [current.blocks[index + delta], current.blocks[index]];
           markDirty(); renderBlocks(delta ? index + delta : Math.max(0, index - 1));
@@ -201,7 +205,7 @@
     if (!current) { $('editor-form').hidden = true; message('글을 찾을 수 없습니다. 게시글 관리 목록에서 다시 선택해 주세요.', true); return; }
     originalBlocks=JSON.parse(JSON.stringify(current.blocks));
     const recovery=localStorage.getItem(workingKey());
-    if(recovery){try{const recovered=JSON.parse(recovery);if(confirm('이 브라우저에 저장하지 않은 변경사항의 복구본이 있습니다. 불러올까요?')){current={...current,...recovered,legacyHtml:current.legacyHtml};dirty=true;}}catch{message('복구본을 읽지 못했습니다. 기존 데이터는 보존됩니다.',true);}}
+    if(recovery){try{const recovered=JSON.parse(recovery);if(await confirmAction('이 브라우저에 저장하지 않은 변경사항의 복구본이 있습니다. 불러올까요?')){current={...current,...recovered,legacyHtml:current.legacyHtml};dirty=true;}}catch{message('복구본을 읽지 못했습니다. 기존 데이터는 보존됩니다.',true);}}
     $('editor-title').textContent = editing ? '글 수정' : '새 글 쓰기';
     categoryOptions($('category'), '', '카테고리 선택');
     $('category').value = current.category;
@@ -269,7 +273,7 @@
     await repo.load();
     $('app').hidden = false; $('logout').hidden = false;
     $('logout').addEventListener('click', async () => {
-      if (dirty && !confirm('저장하지 않은 변경사항은 브라우저 복구본으로 유지됩니다. 로그아웃할까요?')) return;
+      if (dirty && !await confirmAction('저장하지 않은 변경사항은 브라우저 복구본으로 유지됩니다. 로그아웃할까요?')) return;
       try { await Auth.logout(); authState = null; dirty = false; $('app').hidden = true; location.replace('/login'); }
       catch (error) { message(error.message || '로그아웃하지 못했습니다.', true); }
     });
@@ -294,7 +298,7 @@
       renderList(); $('search').addEventListener('input', renderList);
       $('category-filter').addEventListener('change', renderList);
       $('backup-local').addEventListener('click',()=>{try{const raw=localStorage.getItem(M.STORE_KEY);downloadJson(raw===null?[]:JSON.parse(raw),'기존-브라우저-초안-백업');message('기존 저장 데이터를 수정하지 않고 백업했습니다.');}catch(error){message('기존 데이터를 읽지 못했습니다. 저장소는 보존했습니다.',true);}});
-      $('import-local').addEventListener('click',async()=>{try{const raw=localStorage.getItem(M.STORE_KEY);if(raw===null){message('이 브라우저에 이전 초안이 없습니다. 원래 작성한 주소에서 JSON으로 내보내 가져올 수 있습니다.');return;}if(confirm('기존 초안을 별도 주소의 새 DB 초안으로 가져올까요? 원본은 그대로 보존됩니다.'))await importDrafts(JSON.parse(raw));}catch(error){message(error.message,true);}});
+      $('import-local').addEventListener('click',async()=>{try{const raw=localStorage.getItem(M.STORE_KEY);if(raw===null){message('이 브라우저에 이전 초안이 없습니다. 원래 작성한 주소에서 JSON으로 내보내 가져올 수 있습니다.');return;}if(await confirmAction('기존 초안을 별도 주소의 새 DB 초안으로 가져올까요? 원본은 그대로 보존됩니다.'))await importDrafts(JSON.parse(raw));}catch(error){message(error.message,true);}});
       $('backup-db').addEventListener('click',()=>downloadJson(repo.all(),'DB-게시글-백업'));
       $('import-json').addEventListener('change',async()=>{try{const file=$('import-json').files[0];if(!file)return;if(file.size>100*1024*1024)throw new Error('JSON 파일은 100MB 이하로 선택해 주세요.');await importDrafts(JSON.parse(await file.text()));}catch(error){message(error.message,true);}finally{$('import-json').value='';}});
     } else await setupEditor();
