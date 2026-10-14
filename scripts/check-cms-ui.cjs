@@ -22,7 +22,7 @@ w.URL.revokeObjectURL=()=>{};
 w.document.addEventListener('click',event=>{if(event.target.tagName==='A'&&event.target.download)event.preventDefault();},true);
 w.localStorage.setItem(M.STORE_KEY,raw);
 w.WonderfulAuth={session:async()=>({user:{id:'fixture-admin',username:'fixture_admin'}}),request:async(url,body)=>{
- if(!body)return {posts:clone(rows)};
+ if(!body)return {posts:clone(rows),categories:M.categories.map((c,i)=>({...c,slug:c.id,sort_order:i,is_active:true}))};
  calls.push(clone(body));
  if(body.action==='delete'){rows=rows.filter(p=>p.id!==body.id);return {success:true};}
  if(body.action==='save'){const p={...body.post,version:1,viewCount:0,updatedAt:new Date().toISOString(),legacyHtml:''};rows.unshift(p);return {post:clone(p)};}
@@ -33,6 +33,9 @@ w.eval(fs.readFileSync('admin/app.js','utf8'));
 const readBlob=blob=>new Promise((resolve,reject)=>{const reader=new w.FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsText(blob);});
 (async()=>{
  await tick();await tick();assert.equal(w.document.getElementById('app').hidden,false);
+ const statusFilter=w.document.getElementById('status-filter');statusFilter.value='published';statusFilter.dispatchEvent(new w.Event('change'));assert.equal(w.document.querySelectorAll('#post-list tr').length,0);
+ statusFilter.value='draft';statusFilter.dispatchEvent(new w.Event('change'));assert.equal(w.document.querySelectorAll('#post-list tr').length,1);
+ statusFilter.value='all';statusFilter.dispatchEvent(new w.Event('change'));
  const remove=w.document.querySelector('button[aria-label="삭제 검사 초안 삭제"]');
  const dialog=w.document.getElementById('confirm-dialog');
  remove.click();assert(dialog.open);assert(w.document.getElementById('confirm-question').textContent.includes(fixture.title));

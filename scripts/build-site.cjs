@@ -16,5 +16,5 @@ for (const name of fs.readdirSync(root)) if (/^implant-.*\.svg$/.test(name)) fil
 for (const name of files) fs.copyFileSync(path.join(root, name), path.join(output, name));
 fs.cpSync(path.join(root,'images'),path.join(output,'images'),{recursive:true});
 fs.mkdirSync(path.join(output,'admin'));
-for(const name of ['admin.css','model.js','auth.js','database.js','app.js'])fs.copyFileSync(path.join(root,'admin',name),path.join(output,'admin',name));
+for(const name of ['admin.css','model.js','auth.js','database.js','management.js','app.js'])fs.copyFileSync(path.join(root,'admin',name),path.join(output,'admin',name));
 console.log('Built public assets in dist; article/admin templates, seeds, server files and SQL stay excluded.');

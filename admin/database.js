@@ -25,7 +25,7 @@
   }
   window.WonderfulDatabase={
     upload,
-    async load(){posts=(await Auth.request('/api/posts')).posts;return this.all();},
+    async load(){const data=await Auth.request('/api/posts');posts=data.posts;if(!Array.isArray(data.categories))throw new Error('카테고리를 불러오지 못했습니다.');window.WonderfulAdmin.categories.splice(0,window.WonderfulAdmin.categories.length,...data.categories);return this.all();},
     all(){return clone(posts);},
     async get(id){return update((await Auth.request('/api/posts?id='+encodeURIComponent(id))).post);},
     async save(post){const prepared=await prepare(post);return update((await Auth.request('/api/posts',{action:'save',post:prepared})).post);},

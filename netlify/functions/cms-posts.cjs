@@ -2,13 +2,16 @@ const {configuration}=require('../../lib/supabase.cjs');
 const {requireAdmin,clearCookies}=require('../../lib/auth.cjs');
 const {HttpError,response,requireMutation,jsonBody,failure}=require('../../lib/http.cjs');
 const {service}=require('../../lib/posts.cjs');
+const {management}=require('../../lib/admin-data.cjs');
 exports.handler=async event=>{
   let auth;
   try {
     auth=await requireAdmin(event); const posts=service(auth,configuration().environment);
     if(event.httpMethod==='GET') {
       const id=event.queryStringParameters?.id;
-      return response(200,id?{post:await posts.get(id)}:{posts:await posts.list()},auth.cookies);
+      if(id)return response(200,{post:await posts.get(id)},auth.cookies);
+      const [items,categories]=await Promise.all([posts.list(),management(auth,configuration().environment).categories()]);
+      return response(200,{posts:items,categories},auth.cookies);
     }
     requireMutation(event); const body=jsonBody(event);
     if(body.action==='save') return response(200,{post:await posts.save(body.post)},auth.cookies);
