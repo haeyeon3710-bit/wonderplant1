@@ -1,3 +1,7 @@
 [build]
-  command = "node scripts/build-board.cjs"
-  publish = "."
+  command = "node scripts/build-site.cjs"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  included_files = ["adm.html", "editor.html"]

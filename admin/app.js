@@ -1,9 +1,10 @@
 (() => {
   'use strict';
   const M = window.WonderfulAdmin;
+  const Auth = window.WonderfulAuth;
   const $ = id => document.getElementById(id);
   const view = document.body.dataset.view;
-  let repo, current, dirty = false;
+  let repo, current, dirty = false, authState = null;
   const node = (tag, text, className) => {
     const result = document.createElement(tag);
     if (text !== undefined) result.textContent = text;
@@ -18,8 +19,14 @@
     if (error) target.scrollIntoView({ block: 'center' });
   }
   function hasSession() {
-    try { return M.sessionValid(JSON.parse(sessionStorage.getItem(M.SESSION_KEY))); }
-    catch { return false; }
+    return Boolean(authState?.user);
+  }
+  async function refreshSession() {
+    try { authState = await Auth.session(); }
+    catch (error) {
+      if (error.status === 401 || error.status === 403) { authState = null; guard(); }
+      else message(error.message, true);
+    }
   }
   function guard() {
     if (view === 'login' || hasSession()) return true;
@@ -31,13 +38,16 @@
   }
   function setupLogin() {
     $('app').hidden = false;
-    $('login-form').addEventListener('submit', event => {
+    $('login-form').addEventListener('submit', async event => {
       event.preventDefault();
       try {
-        sessionStorage.setItem(M.SESSION_KEY, JSON.stringify({ mode: 'demo', expiresAt: Date.now() + 2 * 60 * 60 * 1000 }));
+        const button = $('login-form').querySelector('button'); button.disabled = true;
+        await Auth.login($('login-username').value.trim().toLowerCase(), $('login-password').value);
+        $('login-password').value = '';
         const next = new URLSearchParams(location.search).get('next') || '/adm';
         location.assign(/^\/adm(?:\/(?:new|edit))?\/?(?:\?[^#]*)?$/.test(next) ? next : '/adm');
-      } catch { message('브라우저에서 세션 저장을 허용해야 체험 화면을 열 수 있습니다.', true); }
+      } catch (error) { message(error.message || '로그인하지 못했습니다.', true); }
+      finally { $('login-form').querySelector('button').disabled = false; }
     });
   }
   function renderList() {
@@ -217,20 +227,35 @@
     });
     window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
   }
-  try {
+  async function start() { try {
     if (!M) throw new Error('관리 화면 파일을 불러오지 못했습니다. 폴더 전체를 다시 업로드해 주세요.');
+    if (!Auth) throw new Error('인증 파일을 불러오지 못했습니다.');
     if (view === 'login') { setupLogin(); return; }
+    try { authState = await Auth.session(); }
+    catch (error) { if (error.status === 401 || error.status === 403) { guard(); return; } throw error; }
     if (!guard()) return;
     repo = M.repository(localStorage, window.WonderfulSeed);
     repo.all();
     $('app').hidden = false; $('logout').hidden = false;
-    $('logout').addEventListener('click', () => {
+    $('logout').addEventListener('click', async () => {
       if (dirty && !confirm('저장하지 않은 변경사항이 있습니다. 체험 로그아웃할까요?')) return;
-      sessionStorage.removeItem(M.SESSION_KEY); dirty = false; $('app').hidden = true; location.replace('/login');
+      try { await Auth.logout(); authState = null; dirty = false; $('app').hidden = true; location.replace('/login'); }
+      catch (error) { message(error.message || '로그아웃하지 못했습니다.', true); }
     });
     $('close-preview').addEventListener('click', () => $('preview').close());
-    window.addEventListener('pageshow', guard);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) guard(); });
+    $('change-password').addEventListener('click', () => { $('password-form').reset(); $('password-message').textContent = ''; $('password-dialog').showModal(); });
+    $('close-password').addEventListener('click', () => { $('password-form').reset(); $('password-dialog').close(); });
+    $('password-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = $('password-form').querySelector('button[type="submit"]');
+      if ($('new-password').value !== $('confirm-password').value) { $('password-message').textContent = '새 비밀번호와 확인이 다릅니다.'; return; }
+      button.disabled = true;
+      try { await Auth.changePassword($('current-password').value, $('new-password').value); $('password-form').reset(); $('password-message').textContent = '비밀번호를 변경했습니다.'; }
+      catch (error) { $('password-message').textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+    window.addEventListener('pageshow', refreshSession);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshSession(); });
     document.addEventListener('click', event => { if (!hasSession()) { event.preventDefault(); event.stopImmediatePropagation(); guard(); } }, true);
     if (view === 'list') {
       categoryOptions($('category-filter'), 'all', '전체보기');
@@ -240,5 +265,6 @@
     } else setupEditor();
   } catch (error) {
     $('app').hidden = true; $('fatal').textContent = error.message || '관리 화면을 열 수 없습니다.'; $('fatal').hidden = false;
-  }
+  } }
+  start();
 })();

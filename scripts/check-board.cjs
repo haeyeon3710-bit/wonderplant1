@@ -60,7 +60,8 @@ const request = url => new Promise(resolve => {
   assert.equal((await request('/blog')).status, 200);
   // Exercise every public route using Netlify's trailing-slash normalization.
   const rules = read('_redirects').trim().split(/\r?\n/).map(line => line.split(/\s+/));
-  for (const [from] of rules) {
+  for (const [from, to] of rules) {
+    if (to.startsWith('/.netlify/functions/')) continue; // Hosted Functions are tested separately.
     for (const start of [from.replace(/\/+$/, ''), from.replace(/\/+$/, '') + '/']) {
       const seen = new Set();
       let current = start;

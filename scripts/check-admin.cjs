@@ -39,20 +39,8 @@ assert(!M.sessionValid({ mode: 'demo', expiresAt: 99 }, 100));
 assert(M.sessionValid({ mode: 'demo', expiresAt: 101 }, 100));
 assert(!M.sessionValid({ mode: 'admin', expiresAt: 101 }, 100));
 
-// Execute the actual app gate for direct access without a demo session.
-for (const view of ['list', 'editor']) {
-  let destination;
-  const app = { hidden: true };
-  vm.runInNewContext(read('admin/app.js'), {
-    window: { WonderfulAdmin: M },
-    document: { body: { dataset: { view } }, getElementById: () => app },
-    sessionStorage: { getItem: () => null },
-    location: { pathname: view === 'list' ? '/adm' : '/adm/edit', search: '', replace: url => { destination = url; } },
-    URLSearchParams,
-  });
-  assert(destination.startsWith('/login?next='));
-  assert(app.hidden);
-}
+// Real authentication is now checked in the server tests, not by the old demo flag.
+assert(!read('admin/app.js').includes('sessionStorage.setItem'));
 for (const file of ['login.html', 'adm.html', 'editor.html']) {
   const html = read(file);
   assert(html.includes('content="noindex,nofollow"'));
