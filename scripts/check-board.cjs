@@ -49,11 +49,8 @@ const request = url => new Promise(resolve => {
     const trailingSlashPage = await request(encodeURI(url + '/'));
     assert.equal(trailingSlashPage.status, 200);
     assert.equal(trailingSlashPage.body, html);
-    for (const old of ['/' + post.original, '/' + post.original.replace('.html', '')]) {
-      const redirect = await request(encodeURI(old));
-      assert.equal(redirect.status, 301);
-      assert.equal(decodeURI(redirect.headers.Location), url);
-    }
+    // Legacy redirects now resolve the current DB slug in cms-public. Their
+    // actual handler is exercised by check-public-render.cjs --live.
     assert(read('sitemap.xml').includes(encodeURI(origin + url)));
   }
   assert.equal((await request('/blog/')).status, 200);

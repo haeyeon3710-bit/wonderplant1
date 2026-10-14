@@ -120,7 +120,7 @@
     $('summary-count').className = 'counter ' + (count >= 120 && count <= 130 ? 'valid' : 'invalid');
   }
   function readForm() {
-    return { ...current, title: $('title').value.trim(), category: $('category').value, slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim(),status:$('post-status').value };
+    return { ...current, legacyHtml:JSON.stringify(current.blocks)===JSON.stringify(originalBlocks)?current.legacyHtml:'',title: $('title').value.trim(), category: $('category').value, slug: $('slug').value.trim(), summary: $('summary').value.trim(), thumbnail: $('thumbnail').value.trim(), thumbnailAlt: $('thumbnail-alt').value.trim(),status:$('post-status').value };
   }
   async function readImage(file) {
     if (!file) return null;

@@ -4,15 +4,16 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build-site.cjs",
-    "test": "node scripts/check-supabase-client.cjs && node scripts/check-auth.cjs && node scripts/check-posts.cjs && node scripts/check-lambda-bundle.cjs && node scripts/check-categories.cjs && node scripts/check-admin.cjs && node scripts/check-board.cjs"
+    "test": "node scripts/check-supabase-client.cjs && node scripts/check-auth.cjs && node scripts/check-posts.cjs && node scripts/check-lambda-bundle.cjs && node scripts/check-cms-ui.cjs && node scripts/check-public-ui.cjs && node scripts/check-views.cjs && node scripts/check-view-edge.cjs && node scripts/check-categories.cjs && node scripts/check-admin.cjs && node scripts/check-board.cjs"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.14.0"
   },
   "dependencies": {
     "sanitize-html": "2.18.0"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "jsdom": "30.1.1"
   }
 }

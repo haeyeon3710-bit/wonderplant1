@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict');
+const secret='v'.repeat(43),config={url:'https://cms-test.invalid',key:'test-publishable',environment:'preview'};
+const event={httpMethod:'POST',rawUrl:'https://blog-test.invalid/api/views',headers:{origin:'https://blog-test.invalid','content-type':'application/json','user-agent':'Fixture Browser'},body:JSON.stringify({id:'11111111-1111-4111-8111-111111111111',viewCount:999,environment:'production',visitorHash:'forged'})};
+(async()=>{
+ const {recordView}=await import('../lib/views.mjs');
+ let sent;
+ const result=await recordView(event,'192.0.2.1',config,secret,async(url,options)=>{sent={url,...options};return {ok:true,json:async()=>({counted:true,viewCount:1})};});
+ assert.equal(result.viewCount,1);const body=JSON.parse(sent.body);
+ assert.equal(body.environment,'preview');assert(/^[a-f0-9]{64}$/.test(body.visitorHash));assert(!sent.body.includes('192.0.2.1'));assert(!sent.body.includes('Fixture Browser'));assert.equal(body.viewCount,undefined);
+ assert.equal(sent.headers['x-cms-view-secret'],secret);
+ let secondHash;
+ await recordView(event,'192.0.2.1',config,secret,async(url,options)=>{secondHash=JSON.parse(options.body).visitorHash;return {ok:true,json:async()=>({counted:false,viewCount:1})};});assert.equal(secondHash,body.visitorHash,'Identity must survive refresh and new browser storage');
+ const skip=async()=>{throw new Error('Excluded traffic must not reach the database');};
+ assert.equal((await recordView({...event,headers:{...event.headers,cookie:'__Host-cms-access=fixture'}},'192.0.2.1',config,secret,skip)).reason,'admin-session');
+ assert.equal((await recordView({...event,headers:{...event.headers,'user-agent':'Googlebot'}},'192.0.2.1',config,secret,skip)).reason,'crawler');
+ await assert.rejects(recordView(event,'not-ip',config,secret,skip),e=>e.status===503);
+ await assert.rejects(recordView(event,'192.0.2.1',config,'',skip),e=>e.status===503);
+ await assert.rejects(recordView({...event,headers:{...event.headers,origin:'https://other.invalid'}},'192.0.2.1',config,secret,skip),e=>e.status===403);
+ await assert.rejects(recordView(event,'192.0.2.1',config,secret,async()=>({ok:false})),e=>e.status===503);
+ console.log('PASS: trusted server IP input, stable private visitor hashes, fixed environment, admin/bot exclusion, protected counter metadata, CSRF and failure handling.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

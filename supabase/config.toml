@@ -1,0 +1,7 @@
+[functions.cms-login]
+verify_jwt = true
+
+# Custom authentication: a random server-only bridge credential whose hash is
+# checked by a service-role-only database RPC before any write occurs.
+[functions.cms-view]
+verify_jwt = false
