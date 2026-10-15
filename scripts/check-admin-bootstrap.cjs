@@ -4,12 +4,11 @@ const clone=value=>JSON.parse(JSON.stringify(value)),tick=()=>new Promise(resolv
 const row={id:'11111111-1111-4111-8111-111111111111',title:'초기 데이터 </script><img src=x onerror=alert(1)>',slug:'bootstrap-test',category_id:'implant',status:'draft',version:3,view_count:0,created_at:'2026-10-01T00:00:00Z',updated_at:'2026-10-01T00:00:00Z',content:[{type:'text',text:'반드시 보존할 본문'}],legacy_article_html:'<article><h1>원본</h1><p>보존할 HTML</p></article>',summary:'설명',thumbnail:'/images/lifespan.png',thumbnail_alt:'설명'};
 const categories=M.categories.map((c,i)=>({...c,slug:c.id,sort_order:i,is_active:true}));
 const statistics={totalPosts:1,totalViews:0,todayViews:0,weekViews:0,monthViews:0,recent:[],popular:[],weekly:[],monthly:[],daily:[{day:'2026-10-01',views:0}]};
-let paths=[],active=0,concurrent=0;
+let paths=[];
 const auth={user:{id:'22222222-2222-4222-8222-222222222222',username:'fixture_admin'},token:'DO_NOT_EMBED_ACCESS_TOKEN',email:'private@example.invalid',api:{request:async(path,options)=>{
- assert.equal(options.token,auth.token);paths.push(path);active++;concurrent=Math.max(concurrent,active);await tick();active--;
- if(path.startsWith('/rest/v1/categories'))return {data:clone(categories)};
- if(path.includes('/rpc/cms_admin_statistics'))return {data:clone(statistics)};
- const url=new URL(path,'https://fixture.invalid'),fields=url.searchParams.get('select').split(',');return {data:[Object.fromEntries(fields.filter(k=>row[k]!==undefined).map(k=>[k,clone(row[k])]))]};
+ assert.equal(options.token,auth.token);paths.push(path);assert.equal(path,'/rest/v1/rpc/cms_admin_page_snapshot');assert.equal(options.body.p_environment,'preview');await tick();
+ const {daily,...overview}=statistics,summary={...row};delete summary.content;delete summary.legacy_article_html;
+ return {data:{user:auth.user,categories:clone(categories),posts:options.body.p_view==='list'?[summary]:[],post:options.body.p_post_id?clone(row):null,...(options.body.p_view==='list'?{statistics:overview}:{})}};
 }}};
 async function ui(data,url){
  const template=fs.readFileSync(data.view==='list'?'adm.html':'editor.html','utf8').replace('</body>',embed(data)+'</body>');
@@ -28,13 +27,14 @@ async function ui(data,url){
  w.close();
 }
 (async()=>{
- const config={environment:'preview'},list=await initialData(auth,config,new URL('https://fixture.invalid/adm'));
- assert(concurrent>=3,'Initial categories/list/statistics must load concurrently');assert.equal(list.posts[0].blocks,undefined);assert.equal(list.statistics.daily,undefined);
- assert(!paths.find(p=>p.startsWith('/rest/v1/posts')).includes('legacy_article_html'),'List query excludes full article HTML');
+ const config={environment:'preview'},load=url=>initialData(auth.token,auth.api,config,new URL('https://fixture.invalid'+url)),list=await load('/adm');
+ assert.equal(paths.length,1,'All initial data must use one RPC');assert.equal(list.posts[0].blocks,undefined);assert.equal(list.statistics.daily,undefined);
  const serialized=embed(list);assert(!serialized.includes(auth.token));assert(!serialized.includes(auth.email));
  const parsed=new JSDOM(serialized);assert.equal(parsed.window.document.querySelectorAll('script').length,1);assert.equal(parsed.window.document.querySelectorAll('img').length,0);assert.equal(JSON.parse(parsed.window.document.querySelector('script').textContent).posts[0].title,row.title);parsed.window.close();
  await ui(list,'/adm');paths=[];
- const fresh=await initialData(auth,config,new URL('https://fixture.invalid/adm/new'));assert.equal(paths.length,1,'New editor loads categories only');await ui(fresh,'/adm/new');paths=[];
- const edit=await initialData(auth,config,new URL('https://fixture.invalid/adm/edit?id='+row.id));assert.equal(paths.length,2,'Editor loads only requested post and categories');assert(paths.find(p=>p.includes('id=eq.'+row.id)));await ui(edit,'/adm/edit?id='+row.id);
- console.log('PASS: parallel private bootstrap, minimal lists, one selected editor post, no repeated initial auth/data requests, safe JSON escaping/no credentials, full backups and concurrent-edit protection.');
+ const fresh=await load('/adm/new');assert.equal(paths.length,1);assert.equal(fresh.post,null);await ui(fresh,'/adm/new');paths=[];
+ const edit=await load('/adm/edit?id='+row.id);assert.equal(paths.length,1,'Editor loads selected post and categories in one RPC');await ui(edit,'/adm/edit?id='+row.id);
+ await assert.rejects(()=>load('/adm/edit?id=invalid'),e=>e.status===400);
+ for(const [code,status] of [['42501',403],['P0002',404]])await assert.rejects(()=>initialData(auth.token,{request:async()=>{throw Object.assign(new Error(),{code});}},config,new URL('https://fixture.invalid/adm')),e=>e.status===status);
+ console.log('PASS: single private snapshot, minimal lists, selected editor post, no repeated startup requests, safe JSON/no credentials, full backups and concurrent-edit protection.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
