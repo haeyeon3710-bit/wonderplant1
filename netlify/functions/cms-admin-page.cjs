@@ -1,19 +1,24 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { requireAdmin, clearCookies } = require('../../lib/auth.cjs');
-const {configuration}=require('../../lib/supabase.cjs');
+const {configuration,client}=require('../../lib/supabase.cjs');
 const {initialData,embed}=require('../../lib/admin-bootstrap.cjs');
 const {optimizeHtml}=require('../../lib/images.cjs');
 const templates=new Map();
 exports.handler = async event => {
   const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' };
   try {
-    const start=performance.now(),auth = await requireAdmin(event),verified=performance.now();
     const url = new URL(event.rawUrl || `https://${event.headers.host}${event.path}`);
+    const config=configuration(),start=performance.now();
+    const auth=await requireAdmin(event,client(config),async(token,api)=>{
+      const data=await initialData(token,api,config,url);
+      return {user:data.user,data};
+    });
+    const verified=performance.now();
     const template = /\/adm\/(new|edit)\/?$/.test(url.pathname) || url.pathname === '/editor.html' ? 'editor.html' : 'adm.html';
-    const data=await initialData(auth,configuration(),url);
+    const data=auth.initial;
     if(!templates.has(template))templates.set(template,optimizeHtml(fs.readFileSync(path.join(process.cwd(),template),'utf8')));
-    headers['Server-Timing']=`auth;dur=${(verified-start).toFixed(1)}, data;dur=${(performance.now()-verified).toFixed(1)}`;
+    headers['Server-Timing']=`verified_snapshot;dur=${(verified-start).toFixed(1)}, render;dur=${(performance.now()-verified).toFixed(1)}`;
     return { statusCode: 200, headers, multiValueHeaders: auth.cookies.length ? { 'Set-Cookie': auth.cookies } : undefined, body: templates.get(template).replace('</body>',embed(data)+'</body>') };
   } catch (error) {
     if (error.status === 401) {
