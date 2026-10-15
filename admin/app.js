@@ -4,7 +4,7 @@
   const Auth = window.WonderfulAuth;
   const $ = id => document.getElementById(id);
   const view = document.body.dataset.view;
-  let repo, current, dirty = false, authState = null, originalBlocks = [], saving = false;
+  let repo, current, dirty = false, authState = null, originalBlocks = [], saving = false,sessionCheck;
   const statusNames = {draft:'임시저장',scheduled:'예약 발행',published:'발행',private:'비공개'};
   const node = (tag, text, className) => {
     const result = document.createElement(tag);
@@ -27,11 +27,12 @@
     return new Promise(resolve=>{dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true});dialog.showModal();});
   }
   async function refreshSession() {
-    try { authState = await Auth.session(); }
+    if(sessionCheck)return sessionCheck;
+    sessionCheck=(async()=>{try { authState = await Auth.session(); }
     catch (error) {
       if (error.status === 401 || error.status === 403) { authState = null; guard(); }
       else message(error.message, true);
-    }
+    }finally{sessionCheck=null;}})();return sessionCheck;
   }
   function guard() {
     if (view === 'login' || hasSession()) return true;
@@ -84,11 +85,11 @@
       remove.addEventListener('click', async () => {
         if (!guard()) return;
         if (!await confirmAction(`“${post.title}”을 삭제할까요? 발행된 글은 공개 목록에서도 삭제됩니다. JSON 백업을 먼저 내려받습니다.`)) return;
-        try { downloadJson(post,post.slug+'-삭제전-백업'); await repo.remove(post.id,post.version); renderList(); refreshStatistics();message('게시글을 삭제했습니다. 이미지 파일은 보존됩니다.'); }
+        try { const full=await repo.complete(post);downloadJson(full,post.slug+'-삭제전-백업'); await repo.remove(post.id,post.version); renderList(); refreshStatistics();message('게시글을 삭제했습니다. 이미지 파일은 보존됩니다.'); }
         catch (error) { message(error.message, true); }
       });
       const copy=node('button','사본');copy.type='button';copy.addEventListener('click',async()=>{try{await repo.copy(post.id);renderList();refreshStatistics();message('별도 주소의 초안 사본을 생성했습니다.');}catch(error){message(error.message,true);}});
-      const state=node('button',post.status==='published'?'비공개':'발행');state.type='button';state.addEventListener('click',async()=>{try{await repo.save({...post,status:post.status==='published'?'private':'published'});renderList();refreshStatistics();message('게시 상태를 변경했습니다.');}catch(error){message(error.message,true);}});
+      const state=node('button',post.status==='published'?'비공개':'발행');state.type='button';state.addEventListener('click',async()=>{state.disabled=true;try{const full=await repo.complete(post);await repo.save({...full,status:post.status==='published'?'private':'published'});renderList();refreshStatistics();message('게시 상태를 변경했습니다.');}catch(error){message(error.message,true);}finally{state.disabled=false;}});
       actions.append(edit, copy, state, remove); row.append(titleCell, categoryCell, status,node('td',Number(post.viewCount||0).toLocaleString('ko-KR')),dateCell, actions); $('post-list').append(row);
     });
   }
@@ -204,7 +205,7 @@
   async function setupEditor() {
     const id = new URLSearchParams(location.search).get('id');
     const editing = /\/edit\/?$/.test(location.pathname) || Boolean(id);
-    current = editing ? await repo.get(id) : {
+    current = editing ? await repo.get(id,{initial:true}) : {
       id: crypto.randomUUID(), title: '', slug: '', category: '', summary: '', thumbnail: '', thumbnailAlt: '', status: 'draft', blocks: [{ type: 'text', text: '' }]
     };
     if (!current) { $('editor-form').hidden = true; message('글을 찾을 수 없습니다. 게시글 관리 목록에서 다시 선택해 주세요.', true); return; }
@@ -275,12 +276,14 @@
     if (!M) throw new Error('관리 화면 파일을 불러오지 못했습니다. 폴더 전체를 다시 업로드해 주세요.');
     if (!Auth) throw new Error('인증 파일을 불러오지 못했습니다.');
     if (view === 'login') { setupLogin(); return; }
-    try { authState = await Auth.session(); }
+    const initialElement=$('cms-bootstrap'),initial=initialElement?JSON.parse(initialElement.textContent):null;
+    if(initial&&(initial.version!==1||initial.view!==view||!initial.user?.id))throw new Error('관리자 초기 데이터를 확인해 주세요.');
+    try { authState = initial?{user:initial.user}:await Auth.session(); }
     catch (error) { if (error.status === 401 || error.status === 403) { guard(); return; } throw error; }
     if (!guard()) return;
     repo = window.WonderfulDatabase;
     if(!repo)throw new Error('게시글 DB 연결 파일을 불러오지 못했습니다.');
-    await repo.load();
+    if(initial)repo.hydrate(initial);else await repo.load();
     $('app').hidden = false; $('logout').hidden = false;
     $('logout').addEventListener('click', async () => {
       if (dirty && !await confirmAction('저장하지 않은 변경사항은 브라우저 복구본으로 유지됩니다. 로그아웃할까요?')) return;
@@ -299,7 +302,7 @@
       catch (error) { $('password-message').textContent = error.message; }
       finally { button.disabled = false; }
     });
-    window.addEventListener('pageshow', refreshSession);
+    window.addEventListener('pageshow', event=>{if(event.persisted)refreshSession();});
     window.addEventListener('cms-auth-expired',()=>{authState=null;guard();});
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshSession(); });
     document.addEventListener('click', event => { if (!hasSession()) { event.preventDefault(); event.stopImmediatePropagation(); guard(); } }, true);
@@ -310,9 +313,9 @@
       $('status-filter')?.addEventListener('change',renderList);
       $('backup-local').addEventListener('click',()=>{try{const raw=localStorage.getItem(M.STORE_KEY);downloadJson(raw===null?[]:JSON.parse(raw),'기존-브라우저-초안-백업');message('기존 저장 데이터를 수정하지 않고 백업했습니다.');}catch(error){message('기존 데이터를 읽지 못했습니다. 저장소는 보존했습니다.',true);}});
       $('import-local').addEventListener('click',async()=>{try{const raw=localStorage.getItem(M.STORE_KEY);if(raw===null){message('이 브라우저에 이전 초안이 없습니다. 원래 작성한 주소에서 JSON으로 내보내 가져올 수 있습니다.');return;}if(await confirmAction('기존 초안을 별도 주소의 새 DB 초안으로 가져올까요? 원본은 그대로 보존됩니다.'))await importDrafts(JSON.parse(raw));}catch(error){message(error.message,true);}});
-      $('backup-db').addEventListener('click',()=>downloadJson(repo.all(),'DB-게시글-백업'));
+      $('backup-db').addEventListener('click',async()=>{const button=$('backup-db');button.disabled=true;try{downloadJson(await repo.exportAll(),'DB-게시글-백업');}catch(error){message(error.message,true);}finally{button.disabled=false;}});
       $('import-json').addEventListener('change',async()=>{try{const file=$('import-json').files[0];if(!file)return;if(file.size>100*1024*1024)throw new Error('JSON 파일은 100MB 이하로 선택해 주세요.');await importDrafts(JSON.parse(await file.text()));}catch(error){message(error.message,true);}finally{$('import-json').value='';}});
-      if(window.WonderfulManagement)await window.WonderfulManagement.initialize(()=>{const selected=$('category-filter').value;categoryOptions($('category-filter'),'all','전체보기');$('category-filter').value=selected;renderList();});
+      if(window.WonderfulManagement)await window.WonderfulManagement.initialize(()=>{const selected=$('category-filter').value;categoryOptions($('category-filter'),'all','전체보기');$('category-filter').value=selected;renderList();},initial?.statistics);
     } else await setupEditor();
   } catch (error) {
     $('app').hidden = true; $('fatal').textContent = error.message || '관리 화면을 열 수 없습니다.'; $('fatal').hidden = false;

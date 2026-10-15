@@ -9,12 +9,12 @@ const server=management({token:'admin-jwt',api:{request:async(path,options)=>{as
 const w=new JSDOM(fs.readFileSync('adm.html','utf8'),{url:'https://cms-test.invalid/adm',runScripts:'outside-only'}).window;
 const cats=M.categories.map((c,i)=>({...c,slug:c.id,sort_order:i+1,is_active:true}));
 const statistics={totalPosts:3,totalViews:9,todayViews:9,weekViews:9,monthViews:9,recent:[{id:'fixture',title:'새 발행 글',published_at:'2026-10-14T03:00:00Z'}],popular:[{id:'fixture',title:'누적 인기 글',period_views:9}],weekly:[{id:'fixture',title:'주간 인기 글',period_views:3}],monthly:[{id:'fixture',title:'월간 인기 글',period_views:8}],daily:[{day:'2026-10-14',views:9}]};
-let posts=[],fail=false,dailyFail=false,deferredDaily;
+let posts=[],fail=false,dailyFail=false,deferredDaily,dailyCalls=0;
 const monthly=month=>{const [year,m]=month.split('-').map(Number),length=new Date(Date.UTC(year,m,0)).getUTCDate();return {month,total:9,days:Array.from({length},(_,i)=>({day:month+'-'+String(i+1).padStart(2,'0'),views:i===0?9:0}))};};
 w.WonderfulAdmin={...M,categories:clone(cats)};
 w.HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};
 w.HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
-w.WonderfulAuth={request:async(url,body)=>{if(fail)throw new Error('연결 오류');if(url.startsWith('/api/manage?month=')){if(dailyFail)throw new Error('월별 조회 오류');const month=new URL(url,'https://cms-test.invalid').searchParams.get('month');if(month==='2024-01'&&deferredDaily)return deferredDaily;return {dailyStats:monthly(month)};}assert.equal(url,'/api/manage');if(body){posts.push(body);cats.push({id:'fixture-category',...body.category});return {category:cats.at(-1)};}return {categories:clone(cats),statistics:clone(statistics)};}};
+w.WonderfulAuth={request:async(url,body)=>{if(fail)throw new Error('연결 오류');if(url.startsWith('/api/manage?month=')){dailyCalls++;if(dailyFail)throw new Error('월별 조회 오류');const month=new URL(url,'https://cms-test.invalid').searchParams.get('month');if(month==='2024-01'&&deferredDaily)return deferredDaily;return {dailyStats:monthly(month)};}assert.equal(url,'/api/manage');if(body){posts.push(body);cats.push({id:'fixture-category',...body.category});return {category:cats.at(-1)};}return {categories:clone(cats),statistics:clone(statistics)};}};
 w.eval(fs.readFileSync('admin/daily-chart.js','utf8'));w.eval(fs.readFileSync('admin/management.js','utf8'));
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 (async()=>{
@@ -25,6 +25,9 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
  assert.equal((await server.dailyViews('2024-02')).total,23);
  for(const month of ['2024-13','2024-00','2024-2','0000-01','2024-02-01',null])await assert.rejects(()=>server.dailyViews(month),e=>e.status===400);
  await w.WonderfulManagement.initialize(()=>{});
+ assert.equal(dailyCalls,0,'A collapsed graph must not start a monthly request');
+ w.document.getElementById('daily-section').open=true;w.document.getElementById('daily-section').dispatchEvent(new w.Event('toggle'));await tick();await tick();
+ assert.equal(dailyCalls,1,'Opening the graph starts one request');
  assert.equal(w.document.getElementById('stat-totalViews').textContent,'9');assert.equal(w.document.querySelectorAll('#category-list tr').length,5);
  const monthInput=w.document.getElementById('daily-month'),changeMonth=async value=>{monthInput.value=value;monthInput.dispatchEvent(new w.Event('change'));await tick();};
  assert.equal(monthInput.value,new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit'}).format(new Date()));assert(w.document.getElementById('daily-next').disabled);
