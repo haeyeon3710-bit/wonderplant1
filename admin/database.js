@@ -1,6 +1,6 @@
 (() => {
   const Auth=window.WonderfulAuth;
-  let posts=[];
+  let posts=[],initialPost=null;
   const clone=value=>JSON.parse(JSON.stringify(value));
   function update(post){const i=posts.findIndex(p=>p.id===post.id);if(i<0)posts.unshift(post);else posts[i]=post;return clone(post);}
   async function upload(file) {
@@ -26,9 +26,22 @@
   }
   window.WonderfulDatabase={
     upload,
+    hydrate(data){
+      if(!Array.isArray(data.categories)||!Array.isArray(data.posts))throw new Error('초기 게시글 데이터를 확인해 주세요.');
+      posts=clone(data.posts);initialPost=data.post?clone(data.post):null;
+      if(initialPost)update(initialPost);
+      window.WonderfulAdmin.categories.splice(0,window.WonderfulAdmin.categories.length,...data.categories);
+    },
     async load(){const data=await Auth.request('/api/posts');posts=data.posts;if(!Array.isArray(data.categories))throw new Error('카테고리를 불러오지 못했습니다.');window.WonderfulAdmin.categories.splice(0,window.WonderfulAdmin.categories.length,...data.categories);return this.all();},
     all(){return clone(posts);},
-    async get(id){return update((await Auth.request('/api/posts?id='+encodeURIComponent(id))).post);},
+    async get(id,{initial=false}={}){if(initial&&initialPost&&(initialPost.id===id||String(initialPost.legacyId)===id)){const post=initialPost;initialPost=null;return clone(post);}return update((await Auth.request('/api/posts?id='+encodeURIComponent(id))).post);},
+    async complete(post){
+      if(Array.isArray(post.blocks))return clone(post);
+      const full=await this.get(post.id);
+      if(full.version!==post.version)throw new Error('다른 화면에서 글이 변경되었습니다. 목록을 새로고침해 주세요.');
+      return full;
+    },
+    async exportAll(){const data=await Auth.request('/api/posts');if(!Array.isArray(data.posts))throw new Error('백업할 게시글을 불러오지 못했습니다.');return data.posts;},
     async save(post){const prepared=await prepare(post);return update((await Auth.request('/api/posts',{action:'save',post:prepared})).post);},
     async copy(id){return update((await Auth.request('/api/posts',{action:'copy',id})).post);},
     async remove(id,version){await Auth.request('/api/posts',{action:'delete',id,version});posts=posts.filter(p=>p.id!==id);},
