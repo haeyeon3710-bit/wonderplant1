@@ -9,9 +9,9 @@
     const signed=await Auth.request('/api/upload',{type:file.type,size:file.size});
     const result=await fetch(signed.uploadUrl,{method:'PUT',body:file,headers:{'Content-Type':file.type,'x-upsert':'false','Cache-Control':'max-age=60'}});
     if(!result.ok) throw new Error('이미지 업로드에 실패했습니다. 20MB 한도와 연결 상태를 확인해 주세요.');
-    let src=signed.src,bytes=file.size,converted=optimized.converted;
-    if(optimized.server){const result=await Auth.request('/api/optimize-image',{src:signed.src});src=result.src;bytes=result.bytes;converted=true;}
-    window.WonderfulDatabase.lastUpload={originalBytes:optimized.originalBytes,bytes,converted};return src;
+    let src=signed.src,bytes=file.size,converted=optimized.converted,originalDeleted=false,cleanupWarning='';
+    if(optimized.server){const result=await Auth.request('/api/optimize-image',{src:signed.src});src=result.src;bytes=result.bytes;converted=true;originalDeleted=result.originalDeleted===true;cleanupWarning=result.cleanupWarning||'';}
+    window.WonderfulDatabase.lastUpload={originalBytes:optimized.originalBytes,bytes,converted,originalDeleted,cleanupWarning};return src;
   }
   async function prepare(post) {
     const result=clone(post);

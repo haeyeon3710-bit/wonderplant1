@@ -30,6 +30,7 @@ async function main(){
  const server=await w.WonderfulImages.prepare(new w.File(['gif'],'animation.gif',{type:'image/gif'}));assert.equal(server.server,true);assert.equal(read,1,'GIF must not be flattened by canvas');
  await assert.rejects(()=>w.WonderfulImages.prepare({type:'image/png',size:20*1024*1024+1}));
  w.HTMLCanvasElement.prototype.toBlob=function(callback){callback(new w.Blob(['png'],{type:'image/png'}));};await assert.rejects(()=>w.WonderfulImages.prepare(input),/WebP/);assert.equal(revoked,2);w.close();
- console.log('PASS: original preservation, smaller WebP assets/srcsets, browser resize/codec failures/20MB limit, animated GIF frame timing and loop preservation, and source path ownership/SSRF checks.');
+ await require('./check-gif-cleanup.cjs').checkGifCleanup();
+ console.log('PASS: repository original preservation, conditional GIF cleanup, smaller WebP assets/srcsets, browser resize/codec failures/20MB, animated timing/loops, and ownership/SSRF checks.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
